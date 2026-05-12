@@ -1,0 +1,14 @@
+model:
+  name: gan_avatar
+  latent_dim: 128
+  img_size: 256
+  fps: 15
+
+training:
+  epochs: 200
+  lr_g: 0.0002
+  lr_d: 0.0002
+  checkpoint_dir: models/generation
+
+evaluation:
+  metric: fid

@@ -1,0 +1,17 @@
+model:
+  name: quantized_llm
+  model_id: meta-llama/Llama-2-7b-chat-hf
+  quantize: true
+  max_length: 128
+
+data:
+  dataset: isl-cslgr
+  batch_size: 16
+
+training:
+  epochs: 20
+  lr: 0.00002
+  checkpoint_dir: models/translation
+
+evaluation:
+  metric: bleu
