@@ -15,7 +15,7 @@ requires-python = ">=3.10"
 dependencies = [
     "torch>=2.0.0",
     "torchvision>=0.15.0",
-    "mediapipe>=0.10.0",
+    "mediapipe>=0.10.9",
     "opencv-python>=4.8.0",
     "transformers>=4.35.0",
     "numpy>=1.24.0",
@@ -27,13 +27,15 @@ dependencies = [
     "sacrebleu>=2.3.0",
     "jiwer>=3.0.0",
     "tqdm>=4.65.0",
+    "wandb>=0.15.0",
     "fastapi>=0.100.0",
     "uvicorn>=0.22.0",
     "python-multipart>=0.0.6",
+    "pytest>=7.0.0",
 ]
 
 [project.urls]
-Repository = "https://github.com/your-org/ASL-ISL"
+Repository = "https://github.com/charliee03/ASL-ISL"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

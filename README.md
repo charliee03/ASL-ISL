@@ -20,7 +20,7 @@
 
 ## Project Status
 
-> **Current Phase:** Weeks 1–4 complete (Repository setup, Literature review, MediaPipe integration, Feature extraction pipeline)
+> **Current Phase:** Weeks 5-8 complete (ASL Recognition, ASL-ISL Translation, GAN Avatar Generation)
 
 ---
 
@@ -51,13 +51,11 @@ ASL-ISL/
 │   ├── translation/        # ASL → ISL grammar translation (LLM)
 │   ├── generation/         # GAN-based avatar animation
 │   ├── web/                # Web application
-│   │   ├── frontend/       # React UI
-│   │   └── backend/        # Node.js API server
 │   └── utils/              # Preprocessing, feature extraction, helpers
 ├── data/
 │   ├── wlasl/              # WLASL dataset (sign videos, glosses)
 │   └── isl/                # ISL-CSLGR dataset
-├── notebooks/              # Jupyter notebooks for exploration & training
+├── scripts/                # Jupyter notebooks for exploration & training
 ├── configs/                # Model & pipeline configuration files
 ├── models/                 # Trained model checkpoints
 ├── docs/                   # Documentation, literature review, IEEE paper
