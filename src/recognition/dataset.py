@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+# pyrefly: ignore [missing-import]
 from src.recognition.preprocess import HandKeypointExtractor
 
 
@@ -57,12 +58,10 @@ class WLASLDataset(Dataset):
 
 
 class ISLDataset(Dataset):
-    def __init__(self, data_root, annotation_file, split="train",
-                 num_frames=16, transform=None):
-        self.data_root = Path(data_root)
-        self.num_frames = num_frames
+    def __init__(self, features_dir, annotation_file, split="train", transform=None):
+        self.features_dir = Path(features_dir)
         self.transform = transform
-        self.extractor = HandKeypointExtractor()
+
         with open(annotation_file) as f:
             annotations = json.load(f)
         self.samples = [ann for ann in annotations if ann.get("split") == split]
@@ -72,28 +71,24 @@ class ISLDataset(Dataset):
 
     def __getitem__(self, idx):
         ann = self.samples[idx]
-        video_path = self.data_root / ann["video"]
-        cap = cv2.VideoCapture(str(video_path))
-        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        indices = np.linspace(0, total - 1, self.num_frames, dtype=int)
-        keypoints = []
-        for fidx in indices:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, fidx)
-            ret, frame = cap.read()
-            if not ret:
-                keypoints.append(np.zeros((21, 3), dtype=np.float32))
-                continue
-            kp = self.extractor.extract(frame)
-            keypoints.append(kp)
-        cap.release()
-        video_kp = np.stack(keypoints)
+        npy_path = self.features_dir / ann["features"]
+        
+        # Load pre-extracted keypoints, shape (16, 21, 3)
+        keypoints = np.load(npy_path).astype(np.float32)
+        
         sample = {
-            "keypoints": torch.FloatTensor(video_kp),
+            "keypoints": keypoints,
             "asl_gloss": ann.get("asl_gloss", ""),
             "isl_gloss": ann.get("isl_gloss", "")
         }
+        
+        # Apply augmentation on numpy array
         if self.transform:
             sample = self.transform(sample)
+            
+        # Convert to tensor AFTER augmentation
+        sample["keypoints"] = torch.FloatTensor(sample["keypoints"])
+        
         return sample
 
 
