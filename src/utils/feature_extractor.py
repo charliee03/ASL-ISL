@@ -33,11 +33,11 @@ class BatchFeatureExtractor:
             cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
             ret, frame = cap.read()
             if not ret:
-                keypoints.append(np.zeros((21, 3), dtype=np.float32))
+                keypoints.append(np.zeros((27, 3), dtype=np.float32))
                 continue
             kp = self.extractor.extract(frame)
-            if len(kp) == 0:
-                kp = np.zeros((21, 3), dtype=np.float32)
+            if kp is None or kp.size == 0:
+                kp = np.zeros((27, 3), dtype=np.float32)
             keypoints.append(kp)
         cap.release()
         return np.stack(keypoints)
@@ -75,8 +75,8 @@ def extract_keypoints_from_frame(frame, extractor=None):
     if extractor is None:
         extractor = HandKeypointExtractor()
     kp = extractor.extract(frame)
-    if len(kp) == 0:
-        return np.zeros((21, 3), dtype=np.float32)
+    if kp is None or kp.size == 0:
+        return np.zeros((27, 3), dtype=np.float32)
     return kp
 
 
@@ -87,13 +87,12 @@ class ISLFeatureExtractor:
 
     def extract_robust_keypoints(self, frame):
         kp = self.extractor.extract(frame)
-        # Handle MediaPipe list output and guarantee (21, 3) shape
-        if len(kp) == 0:
-            return np.zeros((21, 3), dtype=np.float32)
+        if kp is None or kp.size == 0:
+            return np.zeros((27, 3), dtype=np.float32)
         kp_arr = np.array(kp, dtype=np.float32)
-        if kp_arr.shape[0] >= 63:
-            return kp_arr[:63].reshape((21, 3))
-        return np.zeros((21, 3), dtype=np.float32)
+        if kp_arr.shape == (27, 3) or kp_arr.size == 81:
+            return kp_arr.reshape((27, 3))
+        return np.zeros((27, 3), dtype=np.float32)
 
     def extract_from_video(self, video_path):
         cap = cv2.VideoCapture(str(video_path))
@@ -108,7 +107,7 @@ class ISLFeatureExtractor:
             cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
             ret, frame = cap.read()
             if not ret:
-                keypoints.append(np.zeros((21, 3), dtype=np.float32))
+                keypoints.append(np.zeros((27, 3), dtype=np.float32))
                 continue
             kp = self.extract_robust_keypoints(frame)
             keypoints.append(kp)
