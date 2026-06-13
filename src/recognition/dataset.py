@@ -169,6 +169,13 @@ class WLASLDataset(Dataset):
                 if ann.get("split") == split:
                     self.samples.append(ann)
             
+        # Filter out missing videos
+        valid_samples = []
+        for ann in self.samples:
+            if (self.data_root / ann["video"]).exists():
+                valid_samples.append(ann)
+        self.samples = valid_samples
+
         if limit is not None:
             self.samples = self.samples[:limit]
             

@@ -7,20 +7,20 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import yaml
 
-from src.recognition.dataset import WLASLDataset, RandomRotation, RandomSqueeze, RandomMirror, Compose, collate_keypoints
-from src.recognition.model import SignRecognitionTransformer
+from recognition.dataset import WLASLDataset, RandomRotation, RandomSqueeze, RandomMirror, Compose, collate_keypoints
+from recognition.model import SignRecognitionTransformer
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train ASL Recognition Model")
     parser.add_argument("--config", default="configs/recognition.yaml", help="Path to config file")
     parser.add_argument("--data-root", default="data/wlasl", help="Root directory for dataset")
-    parser.add_argument("--annotation-file", default="data/wlasl/WLASL_v0.3.json", help="Path to annotation file")
+    parser.add_argument("--annotation-file", default="data/wlasl/nslt_100.json", help="Path to annotation file")
     parser.add_argument("--epochs", type=int, default=None, help="Override number of training epochs")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of dataset samples")
     return parser.parse_args()
@@ -149,7 +149,7 @@ def train():
     # 3. Optimizer & Scheduler
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    scheduler = StepLR(optimizer, step_size=scheduler_step, gamma=scheduler_gamma)
+    scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     
     # Prep CSV logging
     log_csv_path = checkpoint_dir / "training_log.csv"
@@ -158,6 +158,8 @@ def train():
         writer.writerow(["epoch", "train_loss", "train_acc", "val_loss", "val_acc"])
         
     best_val_acc = -1.0
+    epochs_no_improve = 0
+    patience = train_config.get("patience", 50)
     
     # 4. Training Loop
     for epoch in range(1, epochs + 1):
@@ -175,6 +177,7 @@ def train():
             outputs = model(keypoints)
             loss = criterion(outputs, labels)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             
             train_loss += loss.item() * keypoints.size(0)
@@ -233,11 +236,18 @@ def train():
             writer = csv.writer(log_file)
             writer.writerow([epoch, train_loss, train_acc, val_loss, val_acc])
             
-        # Save best checkpoint
+        # Save best checkpoint and Early Stopping
         if val_acc >= best_val_acc and val_total > 0:
             best_val_acc = val_acc
+            epochs_no_improve = 0
             torch.save(model.state_dict(), checkpoint_dir / "best_model.pt")
-            print(f"--> Saved best checkpoint to {checkpoint_dir / 'best_model.pt'}")
+            print(f"--> Saved best checkpoint to {checkpoint_dir / 'best_model.pt'} (acc: {val_acc:.4f})")
+        else:
+            epochs_no_improve += 1
+            print(f"Early stopping counter: {epochs_no_improve} out of {patience}")
+            if epochs_no_improve >= patience:
+                print(f"Early stopping triggered at epoch {epoch}")
+                break
             
     print("Training finished.")
 
