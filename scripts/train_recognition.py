@@ -251,6 +251,19 @@ def train():
             
     print("Training finished.")
 
+    # Export gloss vocabulary JSON (required by translation module)
+    gloss_vocab = {
+        "version": "1.0",
+        "dataset": "WLASL-100",
+        "num_classes": vocab_size,
+        "gloss_to_id": train_dataset.word2idx,
+        "id_to_gloss": {str(v): k for k, v in train_dataset.word2idx.items()}
+    }
+    vocab_path = checkpoint_dir / "gloss_vocab.json"
+    with open(vocab_path, "w") as f:
+        json.dump(gloss_vocab, f, indent=2)
+    print(f"--> Exported gloss vocabulary ({vocab_size} classes) to {vocab_path}")
+
 
 if __name__ == "__main__":
     train()
