@@ -1,0 +1,176 @@
+Summary,Issue Type,Description,Story Points,Epic Link
+"Upgrade Preprocessing Pipeline to 27 Keypoints",Story,"*Assignee:* Monisha Sharma
+*Sprint:* Sprint 1 (Weeks 5–6)
+
+Goal: Switch from MediaPipe Hands to MediaPipe Holistic, implement 27-node graph reduction, implement signing-space normalisation, and add horizontal mirroring. Update configs/recognition.yaml and src/recognition/dataset.py.
+
+Acceptance Criteria:
+1. src/recognition/preprocess.py correctly extracts 27 keypoints (10 per hand + 7 upper-body landmarks).
+2. Coordinates are normalised relative to the head unit (half-shoulder distance).
+3. configs/recognition.yaml has num_keypoints: 27 and correct augmentation settings.
+4. tests/test_preprocess.py runs and verifies the output shape is (27, 3).
+5. Naman is notified of the API change immediately upon completion.",5,AITE-1
+"Upgrade Transformer Model to SPOTER-like Architecture",Story,"*Assignee:* Monisha Sharma
+*Sprint:* Sprint 1 (Weeks 5–6)
+
+Goal: Upgrade the model architecture in src/recognition/model.py to use an encoder-only structure with a single learnable Class Query token, sinusoidal positional encoding, and input projection for 81 features.
+
+Acceptance Criteria:
+1. Input projection in model.py supports 27 * 3 coordinates.
+2. Encoder-only + learnable Class Query token architecture is implemented.
+3. Model scale targeted at ~5.9M parameters.
+4. configs/recognition.yaml contains correct parameters for the upgraded architecture.",5,AITE-1
+"Develop Recognition Training Script",Story,"*Assignee:* Monisha Sharma
+*Sprint:* Sprint 1 (Weeks 5–6)
+
+Goal: Implement scripts/train_recognition.py to handle the training and validation loops, Adam optimizer, StepLR, CrossEntropyLoss, and training log exports.
+
+Acceptance Criteria:
+1. Training loop handles batch data from WLASLDataset.
+2. Best checkpoints save to models/recognition/best_model.pt.
+3. Loss and accuracy per epoch save to models/recognition/training_log.csv.",3,AITE-1
+"Train and Evaluate ASL Recognition Model",Story,"*Assignee:* Monisha Sharma
+*Sprint:* Sprint 2 (Weeks 7–8)
+
+Goal: Run feature extraction on WLASL videos, train the model on WLASL-100/300/2000, and evaluate using Word Error Rate (WER).
+
+Acceptance Criteria:
+1. Training converges and model achieves a validation WER < 30% on WLASL-100.
+2. best_model.pt and gloss_vocab.json are exported to models/recognition/ and shared by the end of Week 6.
+3. models/recognition/eval_results.json is generated containing the WER evaluation results.",8,AITE-1
+"Design and Implement Grammar Mapping Rules",Story,"*Assignee:* Naman Nagar
+*Sprint:* Sprint 2 (Weeks 7–8)
+
+Goal: Restructure grammar rules from SVO (ASL) to SOV (ISL) format. Implement negation placements, question markers, and save to configs/grammar_rules.json and src/translation/translator.py.
+
+Acceptance Criteria:
+1. Rule-based mapping is defined in configs/grammar_rules.json.
+2. Input strings in SVO format translate to SOV according to established rules.",5,AITE-2
+"Implement NLP Optimization Pipelines (POS-Tagging & Filler-Words)",Story,"*Assignee:* Naman Nagar
+*Sprint:* Sprint 2 (Weeks 7–8)
+
+Goal: Implement part-of-speech (POS) tags to prevent vocabulary explosion (replacing proper nouns and numbers with <PROPN> and <NUM> placeholders) and filter filler words (e.g., UM, LIKE) before passing inputs to the LLM.
+
+Acceptance Criteria:
+1. Placeholder tokens replace out-of-vocabulary words before translation and restore them after translation.
+2. Sign language filler words are removed during preprocessing.",5,AITE-2
+"Upgrade Translation LLM Pipeline & Metrics Evaluation",Story,"*Assignee:* Naman Nagar
+*Sprint:* Sprint 2 (Weeks 7–8)
+
+Goal: Integrate few-shot prompting, temperature controls, output validation against configs/isl_vocabulary.json, and batch translation. Create scripts/eval_translation.py to compute BLEU-4 metrics.
+
+Acceptance Criteria:
+1. Translation prompt contains few-shot ASL to ISL examples.
+2. Output translations validate against configs/isl_vocabulary.json.
+3. scripts/eval_translation.py evaluates translation accuracy.
+4. BLEU-4 score reaches > 20 on the 50-pair verification test set.
+5. configs/isl_vocabulary.json and translator API spec are exported and shared.",8,AITE-2
+"ISL-CSLGR Dataset Pipeline & Paired Data Creation",Story,"*Assignee:* Nandita R Nadig 365
+*Sprint:* Sprint 1 (Weeks 5–6)
+
+Goal: Prepare and preprocess the ISL-CSLGR dataset. Implement data augmentations (horizontal mirroring, temporal jitter, Gaussian noise, and scale augmentation). Formulate data/paired/asl_isl_pairs.json with 50+ paired training data glosses.
+
+Acceptance Criteria:
+1. Processed keypoint arrays are saved to data/isl/processed/.
+2. Augmentation module (src/utils/augmentation.py) is functional.
+3. data/paired/asl_isl_pairs.json is completed and handed off to Naman by end of Week 5.",5,AITE-3
+"Redesign Generator and Discriminator Architectures",Story,"*Assignee:* Nandita R Nadig 365
+*Sprint:* Sprint 2 (Weeks 8–9)
+
+Goal: Refactor src/generation/avatar.py to replace the 2D image-based GAN skeleton with a pose sequence generator (27 keypoints * T frames) utilizing Counter Decoding, a Stop Detection sigmoid module, and a sequence-based discriminator.
+
+Acceptance Criteria:
+1. Generator takes gloss embeddings + noise vector and outputs a variable-length frame sequence.
+2. Counter Decoding and Stop Detection mechanisms stop generation correctly.
+3. Discriminator processes sequences of 27-keypoint coordinates and returns real/fake probability.",8,AITE-3
+"Implement Linear Frame Interpolation and Avatar Training",Story,"*Assignee:* Nandita R Nadig 365
+*Sprint:* Sprint 2 (Weeks 8–9)
+
+Goal: Add linear frame interpolation (2 intermediate frames between sign segments) for smooth transitions. Write scripts/train_avatar.py to train with adversarial, L1 reconstruction, and counter loss.
+
+Acceptance Criteria:
+1. Pose generation includes smooth linear interpolation frames.
+2. Training script saves model checkpoints in models/generation/.
+3. DTW (Dynamic Time Warping) alignment error calculated against ground truth sequences.",5,AITE-3
+"React Frontend Scaffolding (Phase 1)",Story,"*Assignee:* Naman Nagar
+*Sprint:* Sprint 1 (Weeks 5–6)
+
+Goal: Scaffold Vite + React in frontend/, implement WebcamCapture.jsx using navigator.mediaDevices.getUserMedia(), and set up basic dark theme/glassmorphism styling.
+
+Acceptance Criteria:
+1. Vite + React environment runs without errors.
+2. Webcam feed renders in UI and captures real-time video stream.
+3. Base styling system is configured.",3,AITE-4
+"Build Server Endpoints for Sign Recognition (Phase 2)",Story,"*Assignee:* Nandita R Nadig 365
+*Sprint:* Sprint 2 (Week 7)
+
+Goal: Update src/api/server.py to load Monisha's recognition model, upgrade the /predict-gloss endpoint to output predictions/confidence, implement a /predict-sequence endpoint, and configure CORS.
+
+Acceptance Criteria:
+1. Server loads best_model.pt and gloss_vocab.json on startup.
+2. /predict-gloss processes uploaded frames and outputs predictions.
+3. /predict-sequence returns predictions for sequential inputs.
+4. CORS configured to accept requests from http://localhost:5173.",5,AITE-4
+"Integrate Endpoints in React UI (Phase 2 UI)",Story,"*Assignee:* Naman Nagar
+*Sprint:* Sprint 2 (Weeks 7–8)
+
+Goal: Connect React frontend components (api.js) to the /predict-gloss and /translate endpoints. Show predicted ASL and translated ISL glosses in the user interface.
+
+Acceptance Criteria:
+1. Webcam capture sends frames to /predict-gloss and displays predicted text.
+2. ASL gloss feed renders in the frontend panel.",5,AITE-4
+"Complete Full Pipeline Integration and Endpoints",Story,"*Assignee:* Nandita R Nadig 365
+*Sprint:* Sprint 3 (Week 9)
+
+Goal: Add /translate and /generate-avatar endpoints in server.py. Implement unified /pipeline endpoint that processes input files through recognition, translation, and avatar generation sequentially. Include latency logging middleware.
+
+Acceptance Criteria:
+1. /pipeline returns input's ASL gloss, translated ISL gloss, and generated avatar pose sequence.
+2. Latency benchmarks logged for each stage.",5,AITE-4
+"React Avatar Display Integration (Phase 3)",Story,"*Assignee:* Naman Nagar
+*Sprint:* Sprint 3 (Week 9+)
+
+Goal: Connect AvatarDisplay.jsx to /generate-avatar or /pipeline and render the 2D keypoint coordinates as a skeleton animation using HTML5 Canvas. Add play, pause, and speed controls.
+
+Acceptance Criteria:
+1. Pose sequence renders correctly on HTML5 Canvas.
+2. Playback controls function as specified.",5,AITE-4
+"End-to-End Pipeline Testing & User Evaluation",Story,"*Assignee:* Shared (Naman & Nandita)
+*Sprint:* Sprint 4 (Final Review)
+
+Goal: Run integration tests across the complete system, evaluate pipeline under concurrent requests, compile latency numbers, and record user evaluation metrics.
+
+Acceptance Criteria:
+1. E2E system functions without crashes.
+2. Latency benchmark numbers and user feedback reports compiled.",5,AITE-4
+"Methodology & Recognition Results Drafting",Story,"*Assignee:* Monisha Sharma
+*Sprint:* Sprint 3 (Week 9+)
+
+Goal: Write Section III (Methodology - Recognition pipeline, preprocessing) and Section V-A (Recognition Results - WER, ablation). Save to docs/paper_sections/methodology.md and docs/paper_sections/recognition_results.md.
+
+Acceptance Criteria:
+1. Document describes 27-node graph reduction, normalisation, and SPOTER architecture.
+2. Tables contain training logs and WER scores.",3,AITE-5
+"Linguistic Mapping & NLP Evaluation Drafting",Story,"*Assignee:* Naman Nagar
+*Sprint:* Sprint 3 (Week 9+)
+
+Goal: Write Section IV (Linguistic Mapping) and Section V-B (NLP Evaluation - BLEU-4 scores, translations). Save to docs/paper_sections/linguistic_mapping.md and docs/paper_sections/nlp_evaluation.md.
+
+Acceptance Criteria:
+1. Outlines ASL to ISL translation rules and prompt designs.
+2. Incorporates BLEU-4 results.",3,AITE-5
+"Generative Models & System Architecture Drafting",Story,"*Assignee:* Nandita R Nadig 365
+*Sprint:* Sprint 3 (Week 9+)
+
+Story: Write Section IV-B (Generative Models), Section V-C (Latency Benchmarks), and Section VI (System Architecture). Save to docs/paper_sections/generative_models.md and docs/paper_sections/system_architecture.md.
+
+Acceptance Criteria:
+1. Details pose GAN, counter decoding, stop detection, and frame interpolation.
+2. Includes architectural diagrams and API specs.",3,AITE-5
+"Final IEEE Paper Assembly and Review",Story,"*Assignee:* Shared (All)
+*Sprint:* Sprint 4 (Final Review)
+
+Goal: Compile all draft sections, write Introduction, Literature Review, Conclusion, and compile References into a cohesive LaTeX/Markdown paper. Perform complete peer review.
+
+Acceptance Criteria:
+1. Complete paper formatted properly and reviewed.",5,AITE-5
