@@ -249,6 +249,113 @@ class WLASLDataset(Dataset):
         return sample
 
 
+class MSASLDataset(Dataset):
+    def __init__(self, data_root, annotation_file, split="train",
+                 num_frames=16, transform=None, limit=None):
+        self.data_root = Path(data_root)
+        self.num_frames = num_frames
+        self.transform = transform
+        self.extractor = HandKeypointExtractor()
+        
+        # Setup cache directory
+        self.cache_dir = self.data_root / "cached_keypoints"
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        self.samples = []
+        self.classes = set()
+        
+        with open(annotation_file) as f:
+            data = json.load(f)
+            
+        # MSASL_unified.json is a flat list of dicts
+        for entry in data:
+            self.classes.add(entry["gloss"])
+            
+        self.classes = sorted(list(self.classes))
+        self.word2idx = {w: i for i, w in enumerate(self.classes)}
+        
+        for entry in data:
+            if entry.get("split") == split:
+                self.samples.append(entry)
+                
+        # Filter out missing videos
+        valid_samples = []
+        for ann in self.samples:
+            if (self.data_root / ann["video"]).exists():
+                valid_samples.append(ann)
+        self.samples = valid_samples
+        
+        if limit is not None:
+            self.samples = self.samples[:limit]
+            
+        # Count and print cached files for this configuration
+        cached_files = list(self.cache_dir.glob(f"*_f{self.num_frames}.npy"))
+        print(f"[MSASLDataset] Split '{split}': loaded {len(self.samples)} samples. Cache status: {len(cached_files)} keypoint sequence(s) cached in '{self.cache_dir}'.")
+
+    def __len__(self):
+        return len(self.samples)
+
+    def _sample_frames(self, video_path):
+        video_name = Path(video_path).stem
+        cache_file = self.cache_dir / f"{video_name}_f{self.num_frames}.npy"
+        
+        # Load from cache if it exists
+        if cache_file.exists():
+            try:
+                return np.load(cache_file)
+            except Exception:
+                # If cached file is corrupted, fall back to extracting again
+                pass
+
+        if not video_path.exists():
+            return np.zeros((self.num_frames, 27, 3), dtype=np.float32)
+
+        cap = cv2.VideoCapture(str(video_path))
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if total <= 0:
+            cap.release()
+            return np.zeros((self.num_frames, 27, 3), dtype=np.float32)
+            
+        indices = np.linspace(0, total - 1, self.num_frames, dtype=int)
+        keypoints = []
+        for idx in indices:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+            ret, frame = cap.read()
+            if not ret:
+                keypoints.append(np.zeros((27, 3), dtype=np.float32))
+                continue
+            kp = self.extractor.extract(frame)
+            keypoints.append(kp)
+        cap.release()
+        
+        stacked = np.stack(keypoints)
+        
+        # Save to cache for next time
+        try:
+            np.save(cache_file, stacked)
+        except Exception as e:
+            print(f"Warning: could not save cache for {video_name}: {e}")
+            
+        return stacked
+
+    def __getitem__(self, idx):
+        ann = self.samples[idx]
+        video_path = self.data_root / ann["video"]
+        keypoints = self._sample_frames(video_path)
+        label = self.word2idx[ann["gloss"]]
+        
+        sample = {
+            "keypoints": keypoints.astype(np.float32), 
+            "label": label, 
+            "gloss": ann["gloss"]
+        }
+        if self.transform:
+            sample = self.transform(sample)
+            
+        sample["keypoints"] = torch.FloatTensor(sample["keypoints"])
+        return sample
+
+
 class ISLDataset(Dataset):
     def __init__(self, features_dir, annotation_file, split="train", transform=None):
         self.features_dir = Path(features_dir)

@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import yaml
 
-from recognition.dataset import WLASLDataset, RandomRotation, RandomSqueeze, RandomMirror, Compose, collate_keypoints
+from recognition.dataset import WLASLDataset, MSASLDataset, RandomRotation, RandomSqueeze, RandomMirror, Compose, collate_keypoints
 from recognition.model import SignRecognitionTransformer
 
 
@@ -94,8 +94,15 @@ def train():
             
     (data_root / "videos").mkdir(parents=True, exist_ok=True)
     
-    print("Loading datasets...")
-    train_dataset = WLASLDataset(
+    dataset_type = data_config.get("dataset", "wlasl").lower()
+    
+    print(f"Loading {dataset_type.upper()} datasets...")
+    if dataset_type == "msasl":
+        DatasetClass = MSASLDataset
+    else:
+        DatasetClass = WLASLDataset
+        
+    train_dataset = DatasetClass(
         data_root=data_root,
         annotation_file=str(annotation_file),
         split="train",
@@ -104,7 +111,7 @@ def train():
         limit=args.limit
     )
     
-    val_dataset = WLASLDataset(
+    val_dataset = DatasetClass(
         data_root=data_root,
         annotation_file=str(annotation_file),
         split="val",
