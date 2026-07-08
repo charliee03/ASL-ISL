@@ -7,8 +7,9 @@ import cv2
 import numpy as np
 import torch
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 # pyrefly: ignore [missing-import]
 from src.recognition.preprocess import HandKeypointExtractor    
@@ -27,6 +28,10 @@ app.add_middleware(
 )
 
 extractor = HandKeypointExtractor()
+WEB_DIR = Path(__file__).resolve().parent.parent / "web"
+
+if WEB_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")
 
 # Load Model
 NUM_FRAMES = 32
@@ -65,6 +70,17 @@ try:
         
 except Exception as e:
     print(f"Warning: Failed to load model or vocabulary. Error: {e}")
+
+
+@app.get("/", response_class=HTMLResponse)
+def root_page():
+    index_file = WEB_DIR / "index.html"
+    if index_file.exists():
+        return HTMLResponse(index_file.read_text(encoding="utf-8"))
+    return HTMLResponse(
+        "<h1>AITE UI unavailable</h1><p>The web assets were not found.</p>",
+        status_code=503,
+    )
 
 @app.get("/health")
 def health_check():

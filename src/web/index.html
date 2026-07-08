@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AITE | ASL-ISL Translation Engine</title>
+  <meta name="description" content="A polished control surface for the ASL-ISL Translation Engine." />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="background-orb background-orb--one"></div>
+  <div class="background-orb background-orb--two"></div>
+
+  <header class="topbar">
+    <div>
+      <div class="topbar__brand">AITE</div>
+      <div class="topbar__meta">ASL-ISL Translation Engine</div>
+    </div>
+    <nav class="topbar__nav">
+      <a href="#overview">Overview</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#live-demo">Demo</a>
+      <a href="#api">API</a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section id="overview" class="hero panel">
+      <div class="eyebrow">AITE · ASL to ISL pipeline</div>
+      <div class="hero__grid">
+        <div>
+          <h1>Translation, recognition, and avatar generation in one workspace.</h1>
+          <p class="lede">
+            This interface mirrors the actual project architecture: MediaPipe-based keypoint extraction,
+            transformer recognition, vocabulary-aware translation, and GAN avatar generation.
+          </p>
+          <div class="hero__actions">
+            <a class="button button--primary" href="#live-demo">Try the live demo</a>
+            <a class="button button--ghost" href="#architecture">Explore architecture</a>
+          </div>
+          <div class="status-row">
+            <span class="status-pill status-pill--live" id="api-status">API: checking...</span>
+            <span class="status-pill">Recognition API</span>
+            <span class="status-pill">Translation module</span>
+            <span class="status-pill">Avatar module</span>
+          </div>
+        </div>
+
+        <aside class="hero-card panel panel--soft">
+          <div class="hero-card__label">Current runtime</div>
+          <div class="runtime-grid">
+            <div>
+              <span class="runtime-grid__key">Backend</span>
+              <strong>AITE FastAPI</strong>
+            </div>
+            <div>
+              <span class="runtime-grid__key">Model</span>
+              <strong id="model-state">Loading...</strong>
+            </div>
+            <div>
+              <span class="runtime-grid__key">Input</span>
+              <strong>Image or video</strong>
+            </div>
+            <div>
+              <span class="runtime-grid__key">Output</span>
+              <strong>Gloss / keypoints JSON</strong>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="architecture" class="section-grid">
+      <article class="panel">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Project map</div>
+            <h2>How the repository is organized</h2>
+          </div>
+        </div>
+        <div class="module-list">
+          <div class="module-item"><span>src/recognition</span><p>Hand keypoint extraction and transformer-based ASL gloss prediction.</p></div>
+          <div class="module-item"><span>src/translation</span><p>LLM-backed ASL to ISL gloss translation with vocabulary validation.</p></div>
+          <div class="module-item"><span>src/generation</span><p>GAN generator/discriminator scaffold for avatar synthesis.</p></div>
+          <div class="module-item"><span>src/api</span><p>FastAPI endpoints for health, keypoints, and gloss prediction.</p></div>
+          <div class="module-item"><span>src/utils</span><p>Feature extraction, MediaPipe helpers, metrics, and video tools.</p></div>
+          <div class="module-item"><span>configs / docs / Dataset / models</span><p>Configuration, reports, datasets, and trained model assets.</p></div>
+        </div>
+      </article>
+
+      <article class="panel panel--accent">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Pipeline</div>
+            <h2>What is live today</h2>
+          </div>
+        </div>
+        <div class="pipeline">
+          <div class="pipeline-step pipeline-step--live">
+            <strong>1. Keypoint extraction</strong>
+            <p>Reads a frame, extracts 27 landmarks, and returns normalized pose and hand tensors.</p>
+          </div>
+          <div class="pipeline-step pipeline-step--live">
+            <strong>2. ASL recognition</strong>
+            <p>Uses the transformer classifier to predict a gloss and confidence score.</p>
+          </div>
+          <div class="pipeline-step">
+            <strong>3. ASL to ISL translation</strong>
+            <p>Implemented as a library module and vocabulary filter, ready for API exposure.</p>
+          </div>
+          <div class="pipeline-step">
+            <strong>4. Avatar generation</strong>
+            <p>GAN generator/discriminator exists as the model scaffold for future rendering.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="live-demo" class="panel">
+      <div class="section-head section-head--split">
+        <div>
+          <div class="eyebrow">Live demo</div>
+          <h2>Upload media and inspect results</h2>
+        </div>
+        <p class="section-note">All forms talk directly to the FastAPI endpoints, so what you see matches the backend.</p>
+      </div>
+
+      <div class="demo-grid">
+        <form class="demo-card" id="image-form">
+          <div class="demo-card__top">
+            <h3>Frame analysis</h3>
+            <p>Use a single image to extract keypoints or predict a gloss.</p>
+          </div>
+          <label>
+            Endpoint
+            <select id="image-endpoint">
+              <option value="predict-gloss">Predict gloss</option>
+              <option value="extract-keypoints">Extract keypoints</option>
+            </select>
+          </label>
+          <label>
+            Image file
+            <input type="file" id="image-file" accept="image/*" required />
+          </label>
+          <button class="button button--primary" type="submit">Run image endpoint</button>
+          <pre class="output" id="image-output">Upload an image to inspect the result.</pre>
+        </form>
+
+        <form class="demo-card" id="video-form">
+          <div class="demo-card__top">
+            <h3>Sequence analysis</h3>
+            <p>Use a short video clip to run sequence-level gloss prediction.</p>
+          </div>
+          <label>
+            Video file
+            <input type="file" id="video-file" accept="video/*" required />
+          </label>
+          <button class="button button--secondary" type="submit">Run sequence endpoint</button>
+          <pre class="output" id="video-output">Upload a video to inspect the result.</pre>
+        </form>
+      </div>
+    </section>
+
+    <section id="api" class="section-grid section-grid--single">
+      <article class="panel panel--soft">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">API snapshot</div>
+            <h2>Available routes</h2>
+          </div>
+        </div>
+        <div class="route-list">
+          <div><span>GET /health</span><p>Runtime and model status.</p></div>
+          <div><span>POST /extract-keypoints</span><p>Extract 27 normalized keypoints from one image.</p></div>
+          <div><span>POST /predict-gloss</span><p>Predict an ASL gloss from one image.</p></div>
+          <div><span>POST /predict-sequence</span><p>Predict a gloss from a video sequence.</p></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

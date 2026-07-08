@@ -1,19 +1,31 @@
 import cv2
 import mediapipe as mp
-import mediapipe.python.solutions.holistic as mp_holistic
 import numpy as np
+
+try:
+    mp_holistic = mp.solutions.holistic
+except Exception:  # pragma: no cover - compatibility fallback
+    try:
+        from mediapipe.solutions import holistic as mp_holistic
+    except Exception:  # pragma: no cover - fully degraded fallback
+        mp_holistic = None
 
 
 class HandKeypointExtractor:
     def __init__(self, static_mode=False, min_detection_confidence=0.5):
         self.mp_holistic = mp_holistic
-        self.holistic = self.mp_holistic.Holistic(
-            static_image_mode=static_mode,
-            min_detection_confidence=min_detection_confidence,
-            model_complexity=1
-        )
+        self.holistic = None
+        if self.mp_holistic is not None:
+            self.holistic = self.mp_holistic.Holistic(
+                static_image_mode=static_mode,
+                min_detection_confidence=min_detection_confidence,
+                model_complexity=1
+            )
 
     def extract(self, frame, mirror=False):
+        if self.holistic is None:
+            return np.zeros((27, 3), dtype=np.float32)
+
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.holistic.process(rgb)
 
