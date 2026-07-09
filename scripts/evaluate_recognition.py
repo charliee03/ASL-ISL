@@ -17,8 +17,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from recognition.dataset import WLASLDataset, collate_keypoints
-from recognition.model import SignRecognitionTransformer
+# pyrefly: ignore [missing-import]
+from src.recognition.dataset import WLASLDataset, MSASLDataset, collate_keypoints
+# pyrefly: ignore [missing-import]
+from src.recognition.model import SignRecognitionTransformer
+# pyrefly: ignore [missing-import]
 from src.utils.metrics import Metrics
 
 
@@ -120,10 +123,17 @@ def evaluate():
     data_root = Path(args.data_root)
     annotation_file = Path(args.annotation_file)
 
-    val_dataset = WLASLDataset(
+    dataset_type = config.get("data", {}).get("dataset", "wlasl").lower()
+    
+    if dataset_type == "msasl":
+        DatasetClass = MSASLDataset
+    else:
+        DatasetClass = WLASLDataset
+
+    val_dataset = DatasetClass(
         data_root=data_root,
         annotation_file=str(annotation_file),
-        split="val",
+        split="test",  # Test on the true "test" split
         num_frames=num_frames,
         transform=None,
     )

@@ -266,7 +266,7 @@ class WLASLDataset(Dataset):
 
 class MSASLDataset(Dataset):
     def __init__(self, data_root, annotation_file, split="train",
-                 num_frames=16, transform=None, limit=None, preload=True, min_videos_per_class=10):
+                 num_frames=16, transform=None, limit=None, preload=True, min_videos_per_class=30):
         self.data_root = Path(data_root)
         self.num_frames = num_frames
         self.transform = transform
