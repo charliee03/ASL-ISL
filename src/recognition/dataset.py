@@ -266,7 +266,7 @@ class WLASLDataset(Dataset):
 
 class MSASLDataset(Dataset):
     def __init__(self, data_root, annotation_file, split="train",
-                 num_frames=16, transform=None, limit=None, preload=True):
+                 num_frames=16, transform=None, limit=None, preload=True, min_videos_per_class=10):
         self.data_root = Path(data_root)
         self.num_frames = num_frames
         self.transform = transform
@@ -282,6 +282,13 @@ class MSASLDataset(Dataset):
         with open(annotation_file) as f:
             data = json.load(f)
             
+        # Filter out "Weak" classes (<10 videos). Keep "Medium" (10-29) and "Strong" (30+)
+        if min_videos_per_class is not None:
+            from collections import Counter
+            class_counts = Counter(entry["gloss"] for entry in data)
+            valid_classes = set(cls for cls, count in class_counts.items() if count >= min_videos_per_class)
+            data = [entry for entry in data if entry["gloss"] in valid_classes]
+
         # MSASL_unified.json is a flat list of dicts
         for entry in data:
             self.classes.add(entry["gloss"])

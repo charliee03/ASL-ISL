@@ -224,6 +224,7 @@ def train():
                 keypoints = batch["keypoints"].to(device)
                 labels = batch["label"].to(device)
                
+                outputs = model(keypoints)
                 loss = criterion(outputs, labels)
                
                 val_loss += loss.item() * keypoints.size(0)
