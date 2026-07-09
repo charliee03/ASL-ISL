@@ -170,10 +170,12 @@ class WLASLDataset(Dataset):
                 if ann.get("split") == split:
                     self.samples.append(ann)
             
-        # Filter out missing videos
+        # Filter out missing videos and corrupt videos (only keep successfully cached ones)
         valid_samples = []
         for ann in self.samples:
-            if (self.data_root / ann["video"]).exists():
+            video_path = self.data_root / ann["video"]
+            cache_file = self.cache_dir / f"{video_path.stem}_f{self.num_frames}.npy"
+            if cache_file.exists():
                 valid_samples.append(ann)
         self.samples = valid_samples
 
@@ -291,10 +293,12 @@ class MSASLDataset(Dataset):
             if entry.get("split") == split:
                 self.samples.append(entry)
                 
-        # Filter out missing videos
+        # Filter out missing videos and corrupt videos (only keep successfully cached ones)
         valid_samples = []
         for ann in self.samples:
-            if (self.data_root / ann["video"]).exists():
+            video_path = self.data_root / ann["video"]
+            cache_file = self.cache_dir / f"{video_path.stem}_f{self.num_frames}.npy"
+            if cache_file.exists():
                 valid_samples.append(ann)
         self.samples = valid_samples
         

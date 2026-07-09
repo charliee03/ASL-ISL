@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
+# pyrefly: ignore [missing-import]
 from src.recognition.preprocess import HandKeypointExtractor
 
 def process_video(args):
@@ -72,7 +73,7 @@ def build_cache(data_root="data/msasl/MS-ASL", annotation_file="data/msasl/MS-AS
         print("All videos are already cached! You are ready to train.")
         return
         
-    num_cores = max(1, cpu_count() - 2)
+    num_cores = 12 # Change based on system cores and available RAM (each core uses ~2GB)
     print(f"Found {len(tasks)} videos to extract keypoints for.")
     print(f"Starting parallel extraction using {num_cores} CPU cores... (This will maximize CPU usage)")
     
