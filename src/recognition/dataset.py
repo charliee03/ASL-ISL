@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 # pyrefly: ignore [missing-import]
 from src.recognition.preprocess import HandKeypointExtractor
@@ -91,7 +92,7 @@ class Compose:
 
 class WLASLDataset(Dataset):
     def __init__(self, data_root, annotation_file, split="train",
-                 num_frames=16, transform=None, limit=None):
+                 num_frames=16, transform=None, limit=None, preload=True):
         self.data_root = Path(data_root)
         self.num_frames = num_frames
         self.transform = transform
@@ -185,6 +186,14 @@ class WLASLDataset(Dataset):
         cached_files = list(self.cache_dir.glob(f"*_f{self.num_frames}.npy"))
         print(f"[Dataset] Split '{split}': loaded {len(self.samples)} samples. Cache status: {len(cached_files)} keypoint sequence(s) cached in '{self.cache_dir}'.")
 
+        self.preload = preload
+        self.memory_cache = []
+        if self.preload:
+            print(f"Preloading {split} dataset into RAM for maximum efficiency...")
+            for ann in tqdm(self.samples, desc=f"Preloading {split}"):
+                video_path = self.data_root / ann["video"]
+                self.memory_cache.append(self._sample_frames(video_path))
+
     def __len__(self):
         return len(self.samples)
 
@@ -233,8 +242,12 @@ class WLASLDataset(Dataset):
 
     def __getitem__(self, idx):
         ann = self.samples[idx]
-        video_path = self.data_root / ann["video"]
-        keypoints = self._sample_frames(video_path)
+        if self.preload:
+            keypoints = self.memory_cache[idx].copy()
+        else:
+            video_path = self.data_root / ann["video"]
+            keypoints = self._sample_frames(video_path)
+            
         label = self.word2idx[ann["gloss"]]
         
         sample = {
@@ -251,7 +264,7 @@ class WLASLDataset(Dataset):
 
 class MSASLDataset(Dataset):
     def __init__(self, data_root, annotation_file, split="train",
-                 num_frames=16, transform=None, limit=None):
+                 num_frames=16, transform=None, limit=None, preload=True):
         self.data_root = Path(data_root)
         self.num_frames = num_frames
         self.transform = transform
@@ -292,6 +305,14 @@ class MSASLDataset(Dataset):
         cached_files = list(self.cache_dir.glob(f"*_f{self.num_frames}.npy"))
         print(f"[MSASLDataset] Split '{split}': loaded {len(self.samples)} samples. Cache status: {len(cached_files)} keypoint sequence(s) cached in '{self.cache_dir}'.")
 
+        self.preload = preload
+        self.memory_cache = []
+        if self.preload:
+            print(f"Preloading {split} dataset into RAM for maximum efficiency...")
+            for ann in tqdm(self.samples, desc=f"Preloading {split}"):
+                video_path = self.data_root / ann["video"]
+                self.memory_cache.append(self._sample_frames(video_path))
+
     def __len__(self):
         return len(self.samples)
 
@@ -340,8 +361,12 @@ class MSASLDataset(Dataset):
 
     def __getitem__(self, idx):
         ann = self.samples[idx]
-        video_path = self.data_root / ann["video"]
-        keypoints = self._sample_frames(video_path)
+        if self.preload:
+            keypoints = self.memory_cache[idx].copy()
+        else:
+            video_path = self.data_root / ann["video"]
+            keypoints = self._sample_frames(video_path)
+            
         label = self.word2idx[ann["gloss"]]
         
         sample = {
