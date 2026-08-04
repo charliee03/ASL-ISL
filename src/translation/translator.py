@@ -51,13 +51,15 @@ class ASLtoISLTranslator:
         self.grammar_rules = self._load_grammar_rules()
         self.config = self._load_config()
 
-        # Initialize LLM
-        logger.info(f"Loading tokenizer from {model_id}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
-        self.tokenizer.pad_token = self.tokenizer.eos_token
-
-        logger.info(f"Loading model from {model_id} (quantize={quantize})...")
+        # Initialize the optional LLM.  Keep the rule-based translator usable
+        # when model weights are unavailable (for example, in an offline demo).
+        self.tokenizer = None
+        self.model = None
         try:
+            logger.info(f"Loading tokenizer from {model_id}...")
+            self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+            logger.info(f"Loading model from {model_id} (quantize={quantize})...")
             if quantize:
                 self.model = AutoModelForCausalLM.from_pretrained(
                     model_id,
@@ -74,6 +76,7 @@ class ASLtoISLTranslator:
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
             logger.warning("Translator will fall back to rule-based translation only")
+            self.tokenizer = None
             self.model = None
 
         # Hyperparameters from config
@@ -92,11 +95,18 @@ class ASLtoISLTranslator:
             
             with open(path) as f:
                 data = json.load(f)
-                # Handle both {gloss: id} and {id: gloss} formats
-                if isinstance(list(data.values())[0], int):
-                    return data  # {gloss: id}
-                else:
-                    return {v: k for k, v in data.items()}  # Convert {id: gloss} to {gloss: id}
+                # Recognition exports a metadata wrapper with both mappings.
+                if isinstance(data, dict) and isinstance(data.get("gloss_to_id"), dict):
+                    return data["gloss_to_id"]
+                if isinstance(data, dict) and isinstance(data.get("id_to_gloss"), dict):
+                    return {gloss: int(index) for index, gloss in data["id_to_gloss"].items()}
+                # Also support the two compact formats: {gloss: id} and {id: gloss}.
+                if not data:
+                    return {}
+                first_value = next(iter(data.values()))
+                if isinstance(first_value, int):
+                    return data
+                return {gloss: index for index, gloss in data.items()}
         except Exception as e:
             logger.error(f"Error loading gloss vocab: {e}")
             return {}

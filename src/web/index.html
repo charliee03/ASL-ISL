@@ -3,196 +3,88 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AITE | ASL-ISL Translation Engine</title>
-  <meta name="description" content="A polished control surface for the ASL-ISL Translation Engine." />
+  <title>AITE — ASL to ISL Translation</title>
+  <meta name="description" content="AITE translates American Sign Language glosses into Indian Sign Language glosses." />
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-  <div class="background-orb background-orb--one"></div>
-  <div class="background-orb background-orb--two"></div>
-
+  <div class="grain" aria-hidden="true"></div>
   <header class="topbar">
-    <div>
-      <div class="topbar__brand">AITE</div>
-      <div class="topbar__meta">ASL-ISL Translation Engine</div>
-    </div>
-    <nav class="topbar__nav">
-      <a href="#overview">Overview</a>
-      <a href="#architecture">Architecture</a>
-      <a href="#live-demo">Demo</a>
-      <a href="#api">API</a>
+    <a class="brand" href="#top" aria-label="AITE home"><span class="brand__mark">A</span><span>AITE</span></a>
+    <nav class="topbar__nav" aria-label="Main navigation">
+      <a href="#translate">Translate</a><a href="#pipeline">How it works</a><a href="#analyze">Analyze media</a>
     </nav>
+    <span class="connection" id="api-status"><i></i>Connecting</span>
   </header>
 
-  <main class="shell">
-    <section id="overview" class="hero panel">
-      <div class="eyebrow">AITE · ASL to ISL pipeline</div>
-      <div class="hero__grid">
-        <div>
-          <h1>Translation, recognition, and avatar generation in one workspace.</h1>
-          <p class="lede">
-            This interface mirrors the actual project architecture: MediaPipe-based keypoint extraction,
-            transformer recognition, vocabulary-aware translation, and GAN avatar generation.
-          </p>
-          <div class="hero__actions">
-            <a class="button button--primary" href="#live-demo">Try the live demo</a>
-            <a class="button button--ghost" href="#architecture">Explore architecture</a>
-          </div>
-          <div class="status-row">
-            <span class="status-pill status-pill--live" id="api-status">API: checking...</span>
-            <span class="status-pill">Recognition API</span>
-            <span class="status-pill">Translation module</span>
-            <span class="status-pill">Avatar module</span>
-          </div>
-        </div>
-
-        <aside class="hero-card panel panel--soft">
-          <div class="hero-card__label">Current runtime</div>
-          <div class="runtime-grid">
-            <div>
-              <span class="runtime-grid__key">Backend</span>
-              <strong>AITE FastAPI</strong>
-            </div>
-            <div>
-              <span class="runtime-grid__key">Model</span>
-              <strong id="model-state">Loading...</strong>
-            </div>
-            <div>
-              <span class="runtime-grid__key">Input</span>
-              <strong>Image or video</strong>
-            </div>
-            <div>
-              <span class="runtime-grid__key">Output</span>
-              <strong>Gloss / keypoints JSON</strong>
-            </div>
-          </div>
-        </aside>
+  <main id="top" class="shell">
+    <section class="hero">
+      <p class="kicker">ASL <span>→</span> ISL · Translation engine</p>
+      <h1>Language should never be a <em>barrier.</em></h1>
+      <p class="hero__copy">Translate ASL gloss sequences into ISL with a rule-aware pipeline that preserves intent, filters filler signs, and adapts grammar.</p>
+      <div class="hero__facts" aria-label="Project features">
+        <span>Rule-aware</span><span>Gloss-based</span><span>Local fallback</span>
       </div>
     </section>
 
-    <section id="architecture" class="section-grid">
-      <article class="panel">
-        <div class="section-head">
-          <div>
-            <div class="eyebrow">Project map</div>
-            <h2>How the repository is organized</h2>
-          </div>
+    <section id="translate" class="translator" aria-labelledby="translator-title">
+      <div class="translator__header">
+        <div><p class="eyebrow">Translation studio</p><h2 id="translator-title">Shape the message, not just the words.</h2></div>
+        <button class="text-button" type="button" id="example-button">Load an example <span>↗</span></button>
+      </div>
+      <form id="translation-form" class="translation-form">
+        <div class="language-card language-card--source">
+          <div class="language-card__head"><span class="language-badge">ASL</span><span>Source gloss</span></div>
+          <label class="sr-only" for="asl-gloss-input">ASL gloss sequence</label>
+          <textarea id="asl-gloss-input" rows="4" placeholder="HELLO MY NAME IS JOHN" required></textarea>
+          <p class="input-help">Use uppercase glosses separated by spaces.</p>
         </div>
-        <div class="module-list">
-          <div class="module-item"><span>src/recognition</span><p>Hand keypoint extraction and transformer-based ASL gloss prediction.</p></div>
-          <div class="module-item"><span>src/translation</span><p>LLM-backed ASL to ISL gloss translation with vocabulary validation.</p></div>
-          <div class="module-item"><span>src/generation</span><p>GAN generator/discriminator scaffold for avatar synthesis.</p></div>
-          <div class="module-item"><span>src/api</span><p>FastAPI endpoints for health, keypoints, and gloss prediction.</p></div>
-          <div class="module-item"><span>src/utils</span><p>Feature extraction, MediaPipe helpers, metrics, and video tools.</p></div>
-          <div class="module-item"><span>configs / docs / Dataset / models</span><p>Configuration, reports, datasets, and trained model assets.</p></div>
+        <div class="translation-arrow" aria-hidden="true"><span>→</span></div>
+        <div class="language-card language-card--result">
+          <div class="language-card__head"><span class="language-badge language-badge--isl">ISL</span><span>Translated gloss</span><button class="copy-button" id="copy-translation" type="button" disabled aria-label="Copy translation">Copy</button></div>
+          <output id="translation-output" class="translation-result" aria-live="polite"><span class="result-placeholder">Your ISL translation will appear here.</span></output>
+          <div class="result-meta"><span id="translation-mode">Ready for translation</span><span id="translation-confidence">—</span></div>
         </div>
-      </article>
+        <button class="translate-button" type="submit"><span>Translate to ISL</span><b>→</b></button>
+      </form>
+    </section>
 
-      <article class="panel panel--accent">
-        <div class="section-head">
-          <div>
-            <div class="eyebrow">Pipeline</div>
-            <h2>What is live today</h2>
-          </div>
-        </div>
+    <section id="pipeline" class="lower-grid">
+      <article class="panel pipeline-card">
+        <p class="eyebrow">Inside the engine</p><h2>Built for the difference between signs.</h2>
         <div class="pipeline">
-          <div class="pipeline-step pipeline-step--live">
-            <strong>1. Keypoint extraction</strong>
-            <p>Reads a frame, extracts 27 landmarks, and returns normalized pose and hand tensors.</p>
-          </div>
-          <div class="pipeline-step pipeline-step--live">
-            <strong>2. ASL recognition</strong>
-            <p>Uses the transformer classifier to predict a gloss and confidence score.</p>
-          </div>
-          <div class="pipeline-step">
-            <strong>3. ASL to ISL translation</strong>
-            <p>Implemented as a library module and vocabulary filter, ready for API exposure.</p>
-          </div>
-          <div class="pipeline-step">
-            <strong>4. Avatar generation</strong>
-            <p>GAN generator/discriminator exists as the model scaffold for future rendering.</p>
-          </div>
+          <div class="pipeline__step"><span>01</span><div><strong>Read</strong><p>Accept an ASL gloss sequence from recognition or direct input.</p></div></div>
+          <div class="pipeline__step"><span>02</span><div><strong>Refine</strong><p>Remove fillers and map grammar using the ISL rule set.</p></div></div>
+          <div class="pipeline__step"><span>03</span><div><strong>Translate</strong><p>Use contextual refinement when available, with a dependable local fallback.</p></div></div>
         </div>
       </article>
+      <aside class="panel runtime-card">
+        <p class="eyebrow">System status</p><h2>Ready when you are.</h2>
+        <div class="runtime-row"><span>API service</span><strong id="runtime-api">Checking…</strong></div>
+        <div class="runtime-row"><span>Recognition model</span><strong id="model-state">Checking…</strong></div>
+        <div class="runtime-row"><span>Translation layer</span><strong class="available">Available</strong></div>
+        <p class="runtime-note">The engine returns the rule-aware result even if the optional language model is unavailable.</p>
+      </aside>
     </section>
 
-    <section id="live-demo" class="panel">
-      <div class="section-head section-head--split">
-        <div>
-          <div class="eyebrow">Live demo</div>
-          <h2>Upload media and inspect results</h2>
-        </div>
-        <p class="section-note">All forms talk directly to the FastAPI endpoints, so what you see matches the backend.</p>
-      </div>
-
-      <div class="demo-grid">
-        <form class="demo-card" id="image-form">
-          <div class="demo-card__top">
-            <h3>Frame analysis</h3>
-            <p>Use a single image to extract keypoints or predict a gloss.</p>
-          </div>
-          <label>
-            Endpoint
-            <select id="image-endpoint">
-              <option value="predict-gloss">Predict gloss</option>
-              <option value="extract-keypoints">Extract keypoints</option>
-            </select>
-          </label>
-          <label>
-            Image file
-            <input type="file" id="image-file" accept="image/*" required />
-          </label>
-          <button class="button button--primary" type="submit">Run image endpoint</button>
-          <pre class="output" id="image-output">Upload an image to inspect the result.</pre>
+    <section id="analyze" class="media-section">
+      <div class="media-section__intro"><p class="eyebrow">Media workspace</p><h2>Start from a sign, then continue the conversation.</h2><p>Inspect a frame or a short sequence with the recognition pipeline. Use the resulting gloss in the translation studio above.</p></div>
+      <div class="media-grid">
+        <form class="media-card" id="image-form">
+          <div class="media-card__number">01</div><h3>Analyze a frame</h3><p>Extract landmarks or predict an ASL gloss from an image.</p>
+          <label>Action<select id="image-endpoint"><option value="predict-gloss">Predict gloss</option><option value="extract-keypoints">Extract keypoints</option></select></label>
+          <label>Image<input type="file" id="image-file" accept="image/*" required /></label>
+          <button class="secondary-button" type="submit">Run frame analysis</button><pre class="output" id="image-output">Results will appear here.</pre>
         </form>
-
-        <form class="demo-card" id="video-form">
-          <div class="demo-card__top">
-            <h3>Sequence analysis</h3>
-            <p>Use a short video clip to run sequence-level gloss prediction.</p>
-          </div>
-          <label>
-            Video file
-            <input type="file" id="video-file" accept="video/*" required />
-          </label>
-          <button class="button button--secondary" type="submit">Run sequence endpoint</button>
-          <pre class="output" id="video-output">Upload a video to inspect the result.</pre>
-        </form>
-
-        <form class="demo-card" id="translation-form">
-          <div class="demo-card__top">
-            <h3>ASL to ISL Translation</h3>
-            <p>Translate recognized ASL glosses to Indian Sign Language.</p>
-          </div>
-          <label>
-            ASL gloss sequence
-            <input type="text" id="asl-gloss-input" placeholder="e.g., HELLO MY NAME IS JOHN" required />
-          </label>
-          <button class="button button--primary" type="submit">Translate to ISL</button>
-          <pre class="output" id="translation-output">Enter an ASL gloss sequence to see the ISL translation.</pre>
+        <form class="media-card" id="video-form">
+          <div class="media-card__number">02</div><h3>Analyze a sequence</h3><p>Run recognition over a short video clip.</p>
+          <label>Video<input type="file" id="video-file" accept="video/*" required /></label>
+          <button class="secondary-button" type="submit">Run sequence analysis</button><pre class="output" id="video-output">Results will appear here.</pre>
         </form>
       </div>
-    </section>
-
-    <section id="api" class="section-grid section-grid--single">
-      <article class="panel panel--soft">
-        <div class="section-head">
-          <div>
-            <div class="eyebrow">API snapshot</div>
-            <h2>Available routes</h2>
-          </div>
-        </div>
-        <div class="route-list">
-          <div><span>GET /health</span><p>Runtime and model status.</p></div>
-          <div><span>POST /extract-keypoints</span><p>Extract 27 normalized keypoints from one image.</p></div>
-          <div><span>POST /predict-gloss</span><p>Predict an ASL gloss from one image.</p></div>
-          <div><span>POST /predict-sequence</span><p>Predict a gloss from a video sequence.</p></div>
-          <div><span>POST /translate</span><p>Translate ASL gloss sequence to ISL (grammar rules + LLM).</p></div>
-        </div>
-      </article>
     </section>
   </main>
-
+  <footer><span>AITE</span><span>ASL–ISL Translation Engine</span><span>IEEE CS IAMPRO · P107</span></footer>
   <script src="/static/app.js"></script>
 </body>
 </html>

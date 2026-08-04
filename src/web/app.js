@@ -1,122 +1,58 @@
 const apiStatus = document.getElementById('api-status');
+const runtimeApi = document.getElementById('runtime-api');
 const modelState = document.getElementById('model-state');
-const imageForm = document.getElementById('image-form');
-const videoForm = document.getElementById('video-form');
 const translationForm = document.getElementById('translation-form');
-const imageOutput = document.getElementById('image-output');
-const videoOutput = document.getElementById('video-output');
+const glossInput = document.getElementById('asl-gloss-input');
 const translationOutput = document.getElementById('translation-output');
-const imageEndpoint = document.getElementById('image-endpoint');
-const imageFile = document.getElementById('image-file');
-const videoFile = document.getElementById('video-file');
-const aslGlossInput = document.getElementById('asl-gloss-input');
+const translationMode = document.getElementById('translation-mode');
+const translationConfidence = document.getElementById('translation-confidence');
+const copyButton = document.getElementById('copy-translation');
+const exampleButton = document.getElementById('example-button');
 
-function formatResponse(payload) {
-  return JSON.stringify(payload, null, 2);
+function formatResponse(payload) { return JSON.stringify(payload, null, 2); }
+function setTranslationResult(text, { pending = false, confidence = null } = {}) {
+  translationOutput.textContent = text;
+  translationOutput.classList.toggle('result-placeholder', pending);
+  translationMode.textContent = pending ? 'Working through grammar rules…' : text ? 'Translation complete' : 'Ready for translation';
+  translationConfidence.textContent = confidence ? `${Math.round(confidence * 100)}% confidence` : '—';
+  copyButton.disabled = pending || !text;
 }
-
 async function requestJson(url, formData) {
-  const response = await fetch(url, {
-    method: 'POST',
-    body: formData,
-  });
-  const contentType = response.headers.get('content-type') || '';
-  const data = contentType.includes('application/json')
-    ? await response.json()
-    : { detail: await response.text() };
-
-  if (!response.ok) {
-    throw new Error(data.detail || data.error || `Request failed with status ${response.status}`);
-  }
-
+  const response = await fetch(url, { method: 'POST', body: formData });
+  const data = (response.headers.get('content-type') || '').includes('application/json') ? await response.json() : { detail: await response.text() };
+  if (!response.ok) throw new Error(data.detail || data.error || `Request failed (${response.status})`);
   return data;
 }
-
 async function refreshHealth() {
   try {
-    const response = await fetch('/health');
-    const data = await response.json();
-    apiStatus.textContent = `API: ${data.status}`;
-    apiStatus.classList.remove('status-pill--live');
-    if (data.status === 'ok') {
-      apiStatus.classList.add('status-pill--live');
-    }
-    modelState.textContent = data.model_loaded ? 'Loaded' : 'Not loaded';
-  } catch (error) {
-    apiStatus.textContent = 'API: offline';
-    apiStatus.classList.remove('status-pill--live');
-    modelState.textContent = 'Unavailable';
+    const response = await fetch('/health'); const data = await response.json();
+    if (!response.ok) throw new Error();
+    apiStatus.classList.add('connected'); apiStatus.innerHTML = '<i></i>Service online';
+    runtimeApi.textContent = 'Online'; modelState.textContent = data.model_loaded ? 'Loaded' : 'Not loaded';
+  } catch {
+    apiStatus.classList.remove('connected'); apiStatus.innerHTML = '<i></i>Service offline';
+    runtimeApi.textContent = 'Offline'; modelState.textContent = 'Unavailable';
   }
 }
-
-imageForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const file = imageFile.files?.[0];
-  if (!file) {
-    imageOutput.textContent = 'Choose an image first.';
-    return;
-  }
-
-  const endpoint = imageEndpoint.value;
-  const formData = new FormData();
-  formData.append('file', file);
-  imageOutput.textContent = 'Running analysis...';
-
-  try {
-    const data = await requestJson(`/${endpoint}`, formData);
-    imageOutput.textContent = formatResponse(data);
-  } catch (error) {
-    imageOutput.textContent = `Error: ${error.message}`;
-  }
-});
-
-videoForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const file = videoFile.files?.[0];
-  if (!file) {
-    videoOutput.textContent = 'Choose a video first.';
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('file', file);
-  videoOutput.textContent = 'Running sequence analysis...';
-
-  try {
-    const data = await requestJson('/predict-sequence', formData);
-    videoOutput.textContent = formatResponse(data);
-  } catch (error) {
-    videoOutput.textContent = `Error: ${error.message}`;
-  }
-});
-
 translationForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const aslGloss = aslGlossInput.value?.trim();
-  if (!aslGloss) {
-    translationOutput.textContent = 'Enter an ASL gloss sequence first.';
-    return;
-  }
-
-  translationOutput.textContent = 'Translating to ISL...';
-
+  event.preventDefault(); const aslGloss = glossInput.value.trim(); if (!aslGloss) return;
+  setTranslationResult('Translating your gloss sequence…', { pending: true });
   try {
-    const response = await fetch('/translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ asl_gloss: aslGloss }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || data.detail || `Request failed with status ${response.status}`);
-    }
-
-    translationOutput.textContent = formatResponse(data);
-  } catch (error) {
-    translationOutput.textContent = `Error: ${error.message}`;
-  }
+    const response = await fetch('/translate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ asl_gloss: aslGloss }) });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error || data.detail || 'Translation failed');
+    setTranslationResult(data.isl_gloss || 'No translated gloss was returned.', { confidence:data.confidence });
+  } catch (error) { setTranslationResult(`Unable to translate: ${error.message}`); }
 });
-
+exampleButton.addEventListener('click', () => { glossInput.value = 'HELLO MY NAME IS JOHN'; glossInput.focus(); });
+copyButton.addEventListener('click', async () => { try { await navigator.clipboard.writeText(translationOutput.textContent); copyButton.textContent='Copied'; setTimeout(() => { copyButton.textContent='Copy'; }, 1400); } catch { copyButton.textContent='Select text'; } });
+document.getElementById('image-form').addEventListener('submit', async (event) => {
+  event.preventDefault(); const output=document.getElementById('image-output'); const file=document.getElementById('image-file').files?.[0]; if (!file) return;
+  const body=new FormData(); body.append('file',file); output.textContent='Analyzing frame…';
+  try { output.textContent=formatResponse(await requestJson(`/${document.getElementById('image-endpoint').value}`,body)); } catch(error) { output.textContent=`Error: ${error.message}`; }
+});
+document.getElementById('video-form').addEventListener('submit', async (event) => {
+  event.preventDefault(); const output=document.getElementById('video-output'); const file=document.getElementById('video-file').files?.[0]; if (!file) return;
+  const body=new FormData(); body.append('file',file); output.textContent='Analyzing sequence…';
+  try { output.textContent=formatResponse(await requestJson('/predict-sequence',body)); } catch(error) { output.textContent=`Error: ${error.message}`; }
+});
 refreshHealth();
