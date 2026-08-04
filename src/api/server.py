@@ -17,6 +17,8 @@ from src.recognition.preprocess import HandKeypointExtractor
 from src.utils.feature_extractor import extract_keypoints_from_frame
 # pyrefly: ignore [missing-import]
 from src.recognition.model import SignRecognitionTransformer
+# pyrefly: ignore [missing-import]
+from src.translation.translator import ASLtoISLTranslator
 
 app = FastAPI(title="AITE API", version="0.1.0")
 app.add_middleware(
@@ -38,6 +40,7 @@ NUM_FRAMES = 32
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = None
 gloss_vocab = {}
+translator = None
 
 try:
     with open("models/recognition/gloss_vocab.json") as f:
@@ -70,6 +73,18 @@ try:
         
 except Exception as e:
     print(f"Warning: Failed to load model or vocabulary. Error: {e}")
+
+# Load Translator
+try:
+    translator = ASLtoISLTranslator(
+        gloss_vocab_path="models/recognition/gloss_vocab.json",
+        grammar_rules_path="configs/grammar_rules.json",
+        config_path="configs/translation.yaml",
+        quantize=True
+    )
+    print("✓ Translation module loaded successfully")
+except Exception as e:
+    print(f"Warning: Failed to load translation module. Error: {e}")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -133,6 +148,50 @@ async def predict_gloss(file: UploadFile = File(...)):
         "confidence": float(conf.item()),
         "keypoints": keypoints.tolist()
     }
+
+@app.post("/translate")
+async def translate_gloss(body: dict):
+    """
+    Translate ASL gloss to ISL gloss.
+    
+    Request body:
+    {
+        "asl_gloss": "HELLO MY NAME IS JOHN"
+    }
+    
+    Response:
+    {
+        "asl_gloss": "HELLO MY NAME IS JOHN",
+        "isl_gloss": "NAMASKAR MERA NAM JOHN HAI",
+        "confidence": 0.85
+    }
+    """
+    if translator is None:
+        return JSONResponse(
+            {"error": "Translation module not loaded"},
+            status_code=500
+        )
+    
+    asl_gloss = body.get("asl_gloss", "").strip()
+    if not asl_gloss:
+        return JSONResponse(
+            {"error": "Missing or empty asl_gloss in request body"},
+            status_code=400
+        )
+    
+    try:
+        isl_gloss = translator.translate_gloss_string(asl_gloss)
+        
+        return {
+            "asl_gloss": asl_gloss,
+            "isl_gloss": isl_gloss,
+            "confidence": 0.85  # Placeholder; real confidence scoring would require reference data
+        }
+    except Exception as e:
+        return JSONResponse(
+            {"error": f"Translation failed: {str(e)}"},
+            status_code=500
+        )
 
 @app.post("/predict-sequence")
 async def predict_sequence(file: UploadFile = File(...)):

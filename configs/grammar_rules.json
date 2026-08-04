@@ -1,0 +1,92 @@
+{
+  "version": "1.0",
+  "description": "ASL-to-ISL Grammar Translation Rules and Mapping Tables",
+  "metadata": {
+    "source": "ASL-ISL linguistic analysis",
+    "creation_date": "2026-08-04",
+    "languages": ["ASL", "ISL"]
+  },
+  "gloss_mappings": {
+    "HELLO": "NAMASKAR",
+    "GOODBYE": "ALVIDA",
+    "THANK_YOU": "SHUKRIYA",
+    "SORRY": "MAAFI",
+    "YES": "HAAN",
+    "NO": "NAHI",
+    "PLEASE": "KRIPAYA",
+    "WATER": "PANI",
+    "FOOD": "KHANA",
+    "HELP": "MADAD",
+    "PERSON": "VYAKTI",
+    "NAME": "NAM",
+    "TIME": "SAMAY",
+    "DAY": "DIN",
+    "NIGHT": "RAAT",
+    "HAPPY": "KHUSH",
+    "SAD": "UDAAS",
+    "LOVE": "PYAR",
+    "FRIEND": "DOST",
+    "FAMILY": "PARIVAR"
+  },
+  "grammar_transformations": {
+    "subject_verb_order": {
+      "description": "ASL uses topic-comment order; ISL may require subject-verb-object",
+      "rule": "Reorder gloss sequence from (Topic, Comment) to (Subject, Verb, Object)"
+    },
+    "tense_marking": {
+      "description": "ASL marks tense through facial expressions; ISL uses explicit tense markers",
+      "prefixes": {
+        "PAST": "PICHLE",
+        "FUTURE": "AANE_VALE"
+      },
+      "example": "GO → PICHLE_GO (went), GO → AANE_VALE_GO (will go)"
+    },
+    "classifier_predicates": {
+      "description": "Both languages use classifiers, but mapping differs",
+      "transformations": {
+        "MOVE-ALONG": "CHALNA",
+        "MOVE-UPWARD": "UPAR_JANA",
+        "MOVE-DOWNWARD": "NEECHE_JANA",
+        "MOVE-HORIZONTAL": "SIDE_JANA"
+      }
+    },
+    "number_agreement": {
+      "description": "ISL may require explicit number marking",
+      "rule": "If COUNT is present, append _SG (singular) or _PL (plural) to following noun"
+    },
+    "negation": {
+      "description": "ASL uses head shake; ISL uses explicit negation marker",
+      "marker": "NAH_(gloss)",
+      "example": "LIKE → NAH_LIKE (do not like)"
+    }
+  },
+  "filter_rules": {
+    "filler_words": [
+      "UH", "UM", "LIKE", "SO", "WELL", "YOU_KNOW",
+      "I_MEAN", "BASICALLY", "LITERALLY", "RIGHT"
+    ],
+    "discourse_markers": [
+      "ANYWAY", "BY_THE_WAY", "HOWEVER", "ALSO", "ACTUALLY"
+    ],
+    "description": "Remove filler and discourse markers before translation for cleaner output"
+  },
+  "special_cases": {
+    "pronouns": {
+      "I": "MAIN",
+      "YOU": "TUM",
+      "HE": "WO",
+      "SHE": "WO",
+      "IT": "WO",
+      "WE": "HAM",
+      "THEY": "WO"
+    },
+    "question_markers": {
+      "WHO": "KAUN",
+      "WHAT": "KYA",
+      "WHERE": "KAHAN",
+      "WHEN": "KAB",
+      "WHY": "KYUN",
+      "HOW": "KAISE"
+    }
+  }
+}

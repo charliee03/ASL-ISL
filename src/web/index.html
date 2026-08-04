@@ -158,6 +158,19 @@
           <button class="button button--secondary" type="submit">Run sequence endpoint</button>
           <pre class="output" id="video-output">Upload a video to inspect the result.</pre>
         </form>
+
+        <form class="demo-card" id="translation-form">
+          <div class="demo-card__top">
+            <h3>ASL to ISL Translation</h3>
+            <p>Translate recognized ASL glosses to Indian Sign Language.</p>
+          </div>
+          <label>
+            ASL gloss sequence
+            <input type="text" id="asl-gloss-input" placeholder="e.g., HELLO MY NAME IS JOHN" required />
+          </label>
+          <button class="button button--primary" type="submit">Translate to ISL</button>
+          <pre class="output" id="translation-output">Enter an ASL gloss sequence to see the ISL translation.</pre>
+        </form>
       </div>
     </section>
 
@@ -174,6 +187,7 @@
           <div><span>POST /extract-keypoints</span><p>Extract 27 normalized keypoints from one image.</p></div>
           <div><span>POST /predict-gloss</span><p>Predict an ASL gloss from one image.</p></div>
           <div><span>POST /predict-sequence</span><p>Predict a gloss from a video sequence.</p></div>
+          <div><span>POST /translate</span><p>Translate ASL gloss sequence to ISL (grammar rules + LLM).</p></div>
         </div>
       </article>
     </section>

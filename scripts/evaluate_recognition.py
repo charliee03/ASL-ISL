@@ -90,7 +90,7 @@ def evaluate():
     # nhead: Cannot be directly inferred from weight shapes alone.
     # The checkpoint was trained with the model's class defaults (d_model=256,
     # num_encoder_layers=6), not the config YAML values, so we use the model
-    # default of nhead=8.  Fall back to config if d_model matches the config.
+    # default of nhead=8.  Fall back to config if d_model matches the config.                               
     if d_model == model_cfg.get("d_model"):
         nhead = model_cfg.get("nhead", 8)
     else:

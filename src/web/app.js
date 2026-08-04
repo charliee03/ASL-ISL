@@ -2,11 +2,14 @@ const apiStatus = document.getElementById('api-status');
 const modelState = document.getElementById('model-state');
 const imageForm = document.getElementById('image-form');
 const videoForm = document.getElementById('video-form');
+const translationForm = document.getElementById('translation-form');
 const imageOutput = document.getElementById('image-output');
 const videoOutput = document.getElementById('video-output');
+const translationOutput = document.getElementById('translation-output');
 const imageEndpoint = document.getElementById('image-endpoint');
 const imageFile = document.getElementById('image-file');
 const videoFile = document.getElementById('video-file');
+const aslGlossInput = document.getElementById('asl-gloss-input');
 
 function formatResponse(payload) {
   return JSON.stringify(payload, null, 2);
@@ -84,6 +87,35 @@ videoForm.addEventListener('submit', async (event) => {
     videoOutput.textContent = formatResponse(data);
   } catch (error) {
     videoOutput.textContent = `Error: ${error.message}`;
+  }
+});
+
+translationForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const aslGloss = aslGlossInput.value?.trim();
+  if (!aslGloss) {
+    translationOutput.textContent = 'Enter an ASL gloss sequence first.';
+    return;
+  }
+
+  translationOutput.textContent = 'Translating to ISL...';
+
+  try {
+    const response = await fetch('/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ asl_gloss: aslGloss }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.detail || `Request failed with status ${response.status}`);
+    }
+
+    translationOutput.textContent = formatResponse(data);
+  } catch (error) {
+    translationOutput.textContent = `Error: ${error.message}`;
   }
 });
 
