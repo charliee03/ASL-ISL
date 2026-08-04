@@ -17,11 +17,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# pyrefly: ignore [missing-import]
-from src.recognition.dataset import WLASLDataset, MSASLDataset, collate_keypoints
-# pyrefly: ignore [missing-import]
+from src.recognition.dataset import WLASLDataset, collate_keypoints
 from src.recognition.model import SignRecognitionTransformer
-# pyrefly: ignore [missing-import]
 from src.utils.metrics import Metrics
 
 
@@ -29,10 +26,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate ASL Recognition Model")
     parser.add_argument("--config", default="configs/recognition.yaml",
                         help="Path to config file")
-    parser.add_argument("--data-root", default="data/wlasl",
+    parser.add_argument("--data-root", default="Dataset/MS-ASL",
                         help="Root directory for dataset")
-    parser.add_argument("--annotation-file", default="data/wlasl/nslt_100.json",
-                        help="Path to annotation file")
+    parser.add_argument("--annotation-file", default="Dataset/MS-ASL/MSASL_val.json",
+                        help="Path to validation annotation file")
     parser.add_argument("--checkpoint", default="models/recognition/best_model.pt",
                         help="Path to model checkpoint")
     parser.add_argument("--output", default="models/recognition/eval_results.json",
@@ -123,17 +120,10 @@ def evaluate():
     data_root = Path(args.data_root)
     annotation_file = Path(args.annotation_file)
 
-    dataset_type = config.get("data", {}).get("dataset", "wlasl").lower()
-    
-    if dataset_type == "msasl":
-        DatasetClass = MSASLDataset
-    else:
-        DatasetClass = WLASLDataset
-
-    val_dataset = DatasetClass(
+    val_dataset = WLASLDataset(
         data_root=data_root,
         annotation_file=str(annotation_file),
-        split="test",  # Test on the true "test" split
+        split="val",
         num_frames=num_frames,
         transform=None,
     )

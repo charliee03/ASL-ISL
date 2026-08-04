@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 from pathlib import Path
 
@@ -94,6 +95,7 @@ class WLASLDataset(Dataset):
     def __init__(self, data_root, annotation_file, split="train",
                  num_frames=16, transform=None, limit=None, preload=True):
         self.data_root = Path(data_root)
+        self.video_dir = self.data_root / "videos"
         self.num_frames = num_frames
         self.transform = transform
         self.extractor = HandKeypointExtractor()
@@ -104,6 +106,8 @@ class WLASLDataset(Dataset):
         
         self.samples = []
         self.classes = set()
+        self.label_mode = "gloss"
+        self.msasl_label_to_gloss = None
         
         with open(annotation_file) as f:
             data = json.load(f)
@@ -161,21 +165,36 @@ class WLASLDataset(Dataset):
                             "split": split
                         })
         else:
-            # 3. Flattened structure (or mock annotations)
-            for ann in data:
-                self.classes.add(ann["gloss"])
-            self.classes = sorted(list(self.classes))
-            
-            for ann in data:
-                if ann.get("split") == split:
+            # 3. Flattened structure (MS-ASL-style annotations or mock annotations)
+            if len(data) > 0 and "label" in data[0] and "file" in data[0]:
+                self.label_mode = "label"
+                class_list_file = self.data_root / "MSASL_classes.json"
+                if class_list_file.exists():
+                    with open(class_list_file) as clf:
+                        self.classes = json.load(clf)
+                else:
+                    self.classes = sorted({str(ann["label"]) for ann in data})
+
+                self.msasl_label_to_gloss = {
+                    idx: gloss for idx, gloss in enumerate(self.classes)
+                }
+
+                for ann in data:
                     self.samples.append(ann)
+            else:
+                for ann in data:
+                    self.classes.add(ann["gloss"])
+                self.classes = sorted(list(self.classes))
+
+                for ann in data:
+                    if split is None or ann.get("split") == split or "split" not in ann:
+                        self.samples.append(ann)
             
         # Filter out missing videos and corrupt videos (only keep successfully cached ones)
         valid_samples = []
         for ann in self.samples:
-            video_path = self.data_root / ann["video"]
-            cache_file = self.cache_dir / f"{video_path.stem}_f{self.num_frames}.npy"
-            if cache_file.exists():
+            video_path = self._resolve_video_path(ann)
+            if video_path is not None and video_path.exists():
                 valid_samples.append(ann)
         self.samples = valid_samples
 
@@ -188,18 +207,49 @@ class WLASLDataset(Dataset):
         cached_files = list(self.cache_dir.glob(f"*_f{self.num_frames}.npy"))
         print(f"[Dataset] Split '{split}': loaded {len(self.samples)} samples. Cache status: {len(cached_files)} keypoint sequence(s) cached in '{self.cache_dir}'.")
 
-        self.preload = preload
-        self.memory_cache = []
-        if self.preload:
-            print(f"Preloading {split} dataset into RAM for maximum efficiency...")
-            for ann in tqdm(self.samples, desc=f"Preloading {split}"):
-                video_path = self.data_root / ann["video"]
-                self.memory_cache.append(self._sample_frames(video_path))
+    def _resolve_video_path(self, ann):
+        video_value = ann.get("video")
+        if video_value:
+            video_path = Path(video_value)
+            if video_path.is_absolute():
+                return video_path
+            relative_path = self.data_root / video_path
+            if relative_path.exists():
+                return relative_path
+
+        if self.label_mode != "label":
+            return None
+
+        label = ann.get("label")
+        if label is None:
+            return None
+
+        signer_id = ann.get("signer_id", -1)
+        candidate_patterns = []
+        if signer_id is not None and signer_id >= 0:
+            candidate_patterns.append(f"class_{label}_signer_{signer_id}_*.mp4")
+        candidate_patterns.append(f"class_{label}_signer_*_*.mp4")
+        candidate_patterns.append(f"class_{label}_*.mp4")
+
+        matches = []
+        for pattern in candidate_patterns:
+            matches = sorted(self.video_dir.glob(pattern))
+            if matches:
+                break
+
+        if not matches:
+            return None
+
+        seed_text = f"{label}:{signer_id}:{ann.get('file', '')}:{ann.get('start', '')}:{ann.get('end', '')}"
+        digest = hashlib.md5(seed_text.encode("utf-8")).hexdigest()
+        selected_index = int(digest, 16) % len(matches)
+        return matches[selected_index]
 
     def __len__(self):
         return len(self.samples)
 
     def _sample_frames(self, video_path):
+        video_path = Path(video_path)
         video_name = Path(video_path).stem
         cache_file = self.cache_dir / f"{video_name}_f{self.num_frames}.npy"
         
@@ -244,22 +294,23 @@ class WLASLDataset(Dataset):
 
     def __getitem__(self, idx):
         ann = self.samples[idx]
-        if self.preload:
-            keypoints = self.memory_cache[idx].copy()
+        video_path = self._resolve_video_path(ann)
+        keypoints = self._sample_frames(video_path)
+        if self.label_mode == "label":
+            label = int(ann["label"])
+            gloss = self.msasl_label_to_gloss.get(label, str(label)) if self.msasl_label_to_gloss else str(label)
         else:
-            video_path = self.data_root / ann["video"]
-            keypoints = self._sample_frames(video_path)
-            
-        label = self.word2idx[ann["gloss"]]
-        
+            label = self.word2idx[ann["gloss"]]
+            gloss = ann["gloss"]
+
         sample = {
             "keypoints": keypoints.astype(np.float32), 
             "label": label, 
-            "gloss": ann["gloss"]
+            "gloss": gloss
         }
         if self.transform:
             sample = self.transform(sample)
-            
+
         sample["keypoints"] = torch.FloatTensor(sample["keypoints"])
         return sample
 
@@ -379,11 +430,11 @@ class MSASLDataset(Dataset):
             keypoints = self._sample_frames(video_path)
             
         label = self.word2idx[ann["gloss"]]
-        
+
         sample = {
             "keypoints": keypoints.astype(np.float32), 
             "label": label, 
-            "gloss": ann["gloss"]
+            "gloss": gloss
         }
         if self.transform:
             sample = self.transform(sample)

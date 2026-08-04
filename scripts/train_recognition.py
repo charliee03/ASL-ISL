@@ -3,6 +3,7 @@ import argparse
 import csv
 import json
 import os
+import sys
 from pathlib import Path
 import torch
 import torch.nn as nn
@@ -12,17 +13,21 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import yaml
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 # pyrefly: ignore [missing-import]
 from src.recognition.dataset import WLASLDataset, MSASLDataset, RandomRotation, RandomSqueeze, RandomMirror, Compose, collate_keypoints
-# pyrefly: ignore [missing-import]
 from src.recognition.model import SignRecognitionTransformer
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train ASL Recognition Model")
     parser.add_argument("--config", default="configs/recognition.yaml", help="Path to config file")
-    parser.add_argument("--data-root", default="data/wlasl", help="Root directory for dataset")
-    parser.add_argument("--annotation-file", default="data/wlasl/nslt_100.json", help="Path to annotation file")
+    parser.add_argument("--data-root", default="Dataset/MS-ASL", help="Root directory for dataset")
+    parser.add_argument("--annotation-file", default="Dataset/MS-ASL/MSASL_train.json", help="Path to training annotation file")
+    parser.add_argument("--val-annotation-file", default="Dataset/MS-ASL/MSASL_val.json", help="Path to validation annotation file")
     parser.add_argument("--epochs", type=int, default=None, help="Override number of training epochs")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of dataset samples")
     parser.add_argument("--batch-size", type=int, default=None, help="Override batch size from config")
@@ -74,11 +79,11 @@ def train():
         RandomRotation(degree_range=rotation_range),
         RandomSqueeze(squeeze_ratio=squeeze_ratio)
     ])
-   
+
     data_root = Path(args.data_root)
     annotation_file = Path(args.annotation_file)
-   
-    # If annotation file doesn't exist, create a mock one for testing/verification purposes
+    val_annotation_file = Path(args.val_annotation_file)
+
     if not annotation_file.exists():
         print(f"Annotation file {annotation_file} not found. Creating mock annotations.")
         annotation_file.parent.mkdir(parents=True, exist_ok=True)
@@ -96,21 +101,21 @@ def train():
             })
         with open(annotation_file, "w") as f:
             json.dump(mock_ann, f, indent=2)
-           
+
     (data_root / "videos").mkdir(parents=True, exist_ok=True)
-   
+
     dataset_type = data_config.get("dataset", "wlasl").lower()
-   
+
     print(f"Loading {dataset_type.upper()} datasets...")
     if dataset_type == "msasl":
         DatasetClass = MSASLDataset
     else:
         DatasetClass = WLASLDataset
-       
+
     train_dataset = DatasetClass(
         data_root=data_root,
         annotation_file=str(annotation_file),
-        split="train",
+        split=None,
         num_frames=num_frames,
         transform=train_transforms,
         limit=args.limit
@@ -118,13 +123,19 @@ def train():
    
     val_dataset = DatasetClass(
         data_root=data_root,
-        annotation_file=str(annotation_file),
-        split="val",
+        annotation_file=str(val_annotation_file),
+        split=None,
         num_frames=num_frames,
         transform=None,
         limit=args.limit
     )
-   
+
+    if len(train_dataset) == 0 or len(val_dataset) == 0:
+        raise ValueError(
+            f"Empty dataset split(s): train={len(train_dataset)}, val={len(val_dataset)}. "
+            "Check that the annotation JSON matches the available video files."
+        )
+
     vocab_size = len(train_dataset.classes)
     print(f"Vocabulary size: {vocab_size}")
    
