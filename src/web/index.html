@@ -49,6 +49,29 @@
       </form>
     </section>
 
+    <section id="avatar" class="avatar-section" aria-labelledby="avatar-title">
+      <div class="avatar-section__intro">
+        <div><p class="eyebrow">Avatar output</p><h2 id="avatar-title">See the ISL gesture take shape.</h2></div>
+        <p>The generated signing sequence appears here after translation. Video generation may take a few seconds.</p>
+      </div>
+      <div class="avatar-player" aria-busy="false">
+        <div class="avatar-player__stage">
+          <video id="avatar-video" class="avatar-video" controls autoplay playsinline hidden aria-label="Generated ISL avatar gesture"></video>
+          <div id="avatar-placeholder" class="avatar-placeholder">
+            <span class="avatar-placeholder__icon" aria-hidden="true">✦</span>
+            <strong>Your generated ISL avatar will appear here.</strong>
+            <span>Translate a gloss sequence to begin.</span>
+          </div>
+          <div id="avatar-loading" class="avatar-loading" hidden role="status" aria-live="polite">
+            <span class="spinner" aria-hidden="true"></span>
+            <strong>Generating avatar gesture…</strong>
+            <span>Preparing the signed sequence.</span>
+          </div>
+        </div>
+        <div class="avatar-player__footer"><span id="avatar-status" aria-live="polite">Awaiting an ISL translation</span><button id="replay-avatar" class="text-button" type="button" disabled>Replay <span>↻</span></button></div>
+      </div>
+    </section>
+
     <section id="pipeline" class="lower-grid">
       <article class="panel pipeline-card">
         <p class="eyebrow">Inside the engine</p><h2>Built for the difference between signs.</h2>
