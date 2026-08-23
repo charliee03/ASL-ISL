@@ -240,6 +240,76 @@ async def predict_sequence(file: UploadFile = File(...)):
         "confidence": float(conf.item())
     }
 
+@app.post("/generate-avatar")
+async def generate_avatar_endpoint(body: dict):
+    import base64
+    import os
+    import tempfile
+    import json
+    from src.generation.animate import process_file
+    
+    isl_gloss = body.get("isl_gloss", "").strip()
+    if not isl_gloss:
+        return JSONResponse({"error": "Missing isl_gloss"}, status_code=400)
+        
+    rev_map = {"namaskar": "hello", "alvida": "goodbye", "shukriya": "thank_you", "maafi": "sorry", "haan": "yes", "nahi": "no", "kripaya": "please", "pani": "water", "khana": "food", "madad": "help", "vyakti": "person", "nam": "name", "samay": "time", "din": "day", "raat": "night", "khush": "happy", "udaas": "sad", "pyar": "love", "dost": "friend", "parivar": "family", "main": "i", "tum": "you", "wo": "they", "ham": "we", "kaun": "who", "kya": "what", "kahan": "where", "kab": "when", "kyun": "why", "kaise": "how"}
+    
+    words = isl_gloss.lower().split()
+    combined_frames = []
+    fps = 30
+    
+    for word in words:
+        # Check if the word is a Hindi translation that needs reversing to English filename
+        mapped_word = rev_map.get(word, word)
+        
+        path = Path(f"data/isl/keypoints/{mapped_word}.json")
+        if path.exists():
+            with open(path, "r") as f:
+                data = json.load(f)
+                combined_frames.extend(data.get("frames", []))
+                fps = data.get("fps", fps)
+                
+    if not combined_frames:
+        # Fallback to hello
+        path = Path("data/isl/keypoints/hello.json")
+        if path.exists():
+            with open(path, "r") as f:
+                data = json.load(f)
+                combined_frames.extend(data.get("frames", []))
+                fps = data.get("fps", fps)
+        else:
+            return JSONResponse({"error": "No ISL keypoints found"}, status_code=404)
+            
+    # Write combined frames to temp json
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as tmp_json:
+        json.dump({"fps": fps, "frames": combined_frames}, tmp_json)
+        combined_json_path = tmp_json.name
+            
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_mp4:
+        out_video = tmp_mp4.name
+        
+    try:
+        process_file(Path(combined_json_path), save_video=out_video, no_show=True, override_text=isl_gloss)
+        
+        web_video = out_video.replace(".mp4", "_web.mp4")
+        os.system(f"ffmpeg -y -i {out_video} -vcodec libx264 -preset ultrafast -f mp4 {web_video} > /dev/null 2>&1")
+        
+        with open(web_video, "rb") as f:
+            video_bytes = f.read()
+            
+        video_base64 = base64.b64encode(video_bytes).decode("utf-8")
+        return {"video_base64": video_base64, "mime_type": "video/mp4"}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+    finally:
+        if os.path.exists(out_video):
+            os.remove(out_video)
+        if 'web_video' in locals() and os.path.exists(web_video):
+            os.remove(web_video)
+        if os.path.exists(combined_json_path):
+            os.remove(combined_json_path)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

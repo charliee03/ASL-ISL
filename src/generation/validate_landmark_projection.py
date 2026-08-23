@@ -33,10 +33,12 @@ import json
 import numpy as np
 from pathlib import Path
 
-# ---------------- Hardcoded Paths ---------------- #
-
-JSON_PATH = Path(r"keypoints\keypoints_1_high.json")
-VIDEO_PATH = Path(r"videos\keypoints_1_high.MOV")
+import argparse
+import cv2
+import json
+import sys
+import numpy as np
+from pathlib import Path
 
 DISPLAY_WIDTH = 1400
 SCALE = 700
@@ -86,84 +88,117 @@ def draw_connections(canvas, landmarks, connections, color, W, H):
 
 # ------------------------------------------------ #
 
-if not JSON_PATH.exists():
-    print(f"JSON not found:\n{JSON_PATH}")
-    exit()
+def main():
+    parser = argparse.ArgumentParser(description="Validate landmark projection alongside video.")
+    parser.add_argument("json_path", nargs="?", default="data/isl/keypoints/hello.json", help="Path to landmark JSON file")
+    parser.add_argument("video_path", nargs="?", default="data/isl/include-50/Greetings_1of2/Greetings/48. Hello/MVI_0029.MOV", help="Path to source video file")
+    parser.add_argument("--save-video", type=str, default=None, help="Optional output MP4 video path")
+    parser.add_argument("--no-show", action="store_true", help="Do not open GUI window")
+    args = parser.parse_args()
 
-if not VIDEO_PATH.exists():
-    print(f"Video not found:\n{VIDEO_PATH}")
-    exit()
+    json_path = Path(args.json_path)
+    video_path = Path(args.video_path)
 
-print("=" * 60)
-print(f"JSON : {JSON_PATH.name}")
-print(f"VIDEO: {VIDEO_PATH.name}")
-print("=" * 60)
+    if not json_path.exists():
+        print(f"JSON not found:\n{json_path}")
+        sys.exit(1)
 
-with open(JSON_PATH, "r") as f:
-    data = json.load(f)
+    if not video_path.exists():
+        print(f"Video not found:\n{video_path}")
+        sys.exit(1)
 
-frames = data["frames"]
+    print("=" * 60)
+    print(f"JSON : {json_path.name}")
+    print(f"VIDEO: {video_path.name}")
+    print("=" * 60)
 
-cap = cv2.VideoCapture(str(VIDEO_PATH))
+    with open(json_path, "r") as f:
+        data = json.load(f)
 
-W = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-H = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    frames = data["frames"]
 
-window_name = "Keypoint Validation"
+    cap = cv2.VideoCapture(str(video_path))
+    W = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    H = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
 
-cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-cv2.resizeWindow(
-    window_name,
-    DISPLAY_WIDTH,
-    int(DISPLAY_WIDTH * H / (2 * W))
-)
+    writer = None
+    if args.save_video:
+        target_w = DISPLAY_WIDTH
+        target_h = int(DISPLAY_WIDTH * H / (2 * W))
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        writer = cv2.VideoWriter(args.save_video, fourcc, fps, (target_w, target_h))
+        print(f"Saving side-by-side video to: {args.save_video}")
 
-frame_idx = 0
+    window_name = "Keypoint Validation"
 
-while cap.isOpened():
+    if not args.no_show:
+        try:
+            cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(
+                window_name,
+                DISPLAY_WIDTH,
+                int(DISPLAY_WIDTH * H / (2 * W))
+            )
+        except Exception as e:
+            print(f"GUI window unavailable: {e}. Running in headless mode.")
+            args.no_show = True
 
-    ret, frame = cap.read()
+    frame_idx = 0
 
-    if not ret or frame_idx >= len(frames):
-        break
+    while cap.isOpened():
+        ret, frame = cap.read()
 
-    canvas = np.zeros((H, W, 3), dtype=np.uint8)
+        if not ret or frame_idx >= len(frames):
+            break
 
-    frame_data = frames[frame_idx]
+        canvas = np.zeros((H, W, 3), dtype=np.uint8)
+        frame_data = frames[frame_idx]
 
-    pose = frame_data["pose"]
-    left = frame_data["left_hand"]
-    right = frame_data["right_hand"]
+        pose = frame_data["pose"]
+        left = frame_data["left_hand"]
+        right = frame_data["right_hand"]
 
-    draw_connections(canvas, pose, POSE_CONNECTIONS, (255, 255, 255), W, H)
-    draw_landmarks(canvas, pose, (255, 255, 255), W, H)
+        draw_connections(canvas, pose, POSE_CONNECTIONS, (255, 255, 255), W, H)
+        draw_landmarks(canvas, pose, (255, 255, 255), W, H)
 
-    draw_connections(canvas, left, HAND_CONNECTIONS, (0, 255, 0), W, H)
-    draw_landmarks(canvas, left, (0, 255, 0), W, H)
+        draw_connections(canvas, left, HAND_CONNECTIONS, (0, 255, 0), W, H)
+        draw_landmarks(canvas, left, (0, 255, 0), W, H)
 
-    draw_connections(canvas, right, HAND_CONNECTIONS, (0, 0, 255), W, H)
-    draw_landmarks(canvas, right, (0, 0, 255), W, H)
+        draw_connections(canvas, right, HAND_CONNECTIONS, (0, 0, 255), W, H)
+        draw_landmarks(canvas, right, (0, 0, 255), W, H)
 
-    combined = cv2.hconcat([frame, canvas])
+        combined = cv2.hconcat([frame, canvas])
 
-    combined = cv2.resize(
-        combined,
-        (
-            DISPLAY_WIDTH,
-            int(DISPLAY_WIDTH * combined.shape[0] / combined.shape[1])
+        combined = cv2.resize(
+            combined,
+            (
+                DISPLAY_WIDTH,
+                int(DISPLAY_WIDTH * combined.shape[0] / combined.shape[1])
+            )
         )
-    )
 
-    cv2.imshow(window_name, combined)
+        if writer:
+            writer.write(combined)
 
-    key = cv2.waitKey(30) & 0xFF
+        if not args.no_show:
+            cv2.imshow(window_name, combined)
+            key = cv2.waitKey(30) & 0xFF
+            if key == ord("q"):
+                break
 
-    if key == ord("q"):
-        break
+        frame_idx += 1
 
-    frame_idx += 1
+    cap.release()
 
-cap.release()
-cv2.destroyAllWindows()
+    if writer:
+        writer.release()
 
-print("\nFinished.")
+    if not args.no_show:
+        cv2.destroyAllWindows()
+
+    print("\nFinished validation.")
+
+
+if __name__ == "__main__":
+    main()
