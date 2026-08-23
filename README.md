@@ -36,7 +36,7 @@ Input (Video) → Preprocessing → ASL Recognition → Cross-lingual Translatio
 
 ### Stages
 
-1. **Sign Recognition** — Transformer-based model (trained on WLASL) extracts ASL gloss/text from video frames using MediaPipe hand keypoints.
+1. **Sign Recognition** — Transformer-based model (trained on MSASL) extracts ASL gloss/text from video frames using MediaPipe hand keypoints.
 2. **Cross-Lingual Translation** — Lightweight quantized LLM transforms ASL grammar/syntax to ISL.
 3. **Sign Generation** — GAN-based avatar renders ISL signs in real-time (≥15 FPS).
 
@@ -53,12 +53,14 @@ ASL-ISL/
 │   ├── web/                # Web application
 │   └── utils/              # Preprocessing, feature extraction, helpers
 ├── data/
-│   ├── wlasl/              # WLASL dataset (sign videos, glosses)
-│   └── isl/                # ISL-CSLGR dataset
+│   ├── msasl/              # MSASL dataset (sign videos, glosses)
+│   └── isl/                # INCLUDE dataset
 ├── scripts/                # Jupyter notebooks for exploration & training
 ├── configs/                # Model & pipeline configuration files
 ├── models/                 # Trained model checkpoints
 ├── docs/                   # Documentation, literature review, IEEE paper
+│   ├── monthly_reports/    # Project progress and monthly status reports
+│   └── jira_backlog_import.csv # Jira tasks export
 ├── tests/                  # Unit and integration tests
 ├── requirements.txt        # Python dependencies
 └── README.md
@@ -70,8 +72,8 @@ ASL-ISL/
 
 | Dataset | Source | Description |
 |---------|--------|-------------|
-| [WLASL](https://www.kaggle.com/datasets/risangbaskoro/wlasl-processed) | IEEE / Public | 21,000+ clips, 2,000+ ASL signs |
-| [ISL-CSLGR](https://www.kaggle.com/datasets/drblack00/isl-csltr-indian-sign-language-dataset) | Public | Indian Sign Language gestures |
+| [MSASL](https://microsoft.github.io/data-for-society/dataset?d=MS-ASL-American-Sign-Language-Dataset) | Microsoft | Large-scale ASL dataset |
+| [INCLUDE-50](https://www.kaggle.com/datasets/yuvrajjoshi1110/include-50) | Public | Indian Sign Language dataset |
 
 ---
 
@@ -98,7 +100,10 @@ ASL-ISL/
 
 ## Monthly Reports
 
-- [Month 1 (Apr 2026)](docs/monthly_report_1.md) — Project setup, literature review, MediaPipe integration, feature extraction
+- [Month 1 Summary (Apr 2026)](docs/monthly_report_1.md) — Project setup, literature review, feature extraction
+- [Month 1 Full Report (PDF)](docs/monthly_reports/P107_MonthlyProgressReport_1.docx.PDF)
+- [Month 2 Full Report (PDF)](docs/monthly_reports/Monthly%20Report%20-%202.docx.PDF)
+- [Month 3 Full Report (PDF)](docs/monthly_reports/Monthly_Report_3_July_2026.pdf)
 
 ---
 
@@ -123,6 +128,13 @@ See full table in [`docs/literature_review.md`](docs/literature_review.md).
 
 ---
 
+## System Requirements
+
+- **Python 3.10+**
+- **ffmpeg**: Must be installed and available in your system's PATH for the avatar generation to work.
+
+---
+
 ## Getting Started
 
 ```bash
@@ -130,6 +142,33 @@ git clone https://github.com/your-org/ASL-ISL.git
 cd ASL-ISL
 pip install -r requirements.txt
 ```
+
+To run the application (both backend and web frontend):
+
+```bash
+python -m src.api.server
+# Or, for development with hot-reload:
+# uvicorn src.api.server:app --reload
+```
+
+The application will be available at `http://localhost:8000`.
+
+---
+
+## Troubleshooting & Models
+
+If you encounter a `401 Client Error` indicating access to `meta-llama/Llama-2-7b-chat-hf` is restricted:
+
+### Option 1: Authenticate with HuggingFace
+1. Request access on the [Llama-2 HuggingFace page](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf).
+2. Generate a Read token in your HuggingFace settings.
+3. Run `huggingface-cli login` in your terminal and provide the token.
+
+### Option 2: Use a non-gated model
+To bypass the gated model, update `configs/translation.yaml`:
+Change `model_id: meta-llama/Llama-2-7b-chat-hf` to an open model, such as `model_id: TinyLlama/TinyLlama-1.1B-Chat-v1.0`.
+
+*(Note: Even if the translation model fails to load, the server will fall back to rule-based translation and the UI will still be accessible!)*
 
 ---
 

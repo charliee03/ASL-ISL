@@ -6,6 +6,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
+import subprocess
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -292,7 +293,12 @@ async def generate_avatar_endpoint(body: dict):
         process_file(Path(combined_json_path), save_video=out_video, no_show=True, override_text=isl_gloss)
         
         web_video = out_video.replace(".mp4", "_web.mp4")
-        os.system(f"ffmpeg -y -i {out_video} -vcodec libx264 -preset ultrafast -f mp4 {web_video} > /dev/null 2>&1")
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", out_video, "-vcodec", "libx264", "-preset", "ultrafast", "-f", "mp4", web_video],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True
+        )
         
         with open(web_video, "rb") as f:
             video_bytes = f.read()
