@@ -1,6 +1,9 @@
 import io
 import json
+import os
 import tempfile
+import time
+import uuid
 from pathlib import Path
 
 import cv2
@@ -30,11 +33,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+PROJECT_DIR = Path(__file__).resolve().parents[2]
 extractor = HandKeypointExtractor()
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
+GENERATED_DIR = Path(os.getenv("AITE_GENERATED_DIR", "/tmp/aite-generated"))
+GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
 if WEB_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")
+app.mount("/generated", StaticFiles(directory=str(GENERATED_DIR)), name="generated")
 
 # Load Model
 NUM_FRAMES = 32
@@ -44,7 +51,7 @@ gloss_vocab = {}
 translator = None
 
 try:
-    with open("models/recognition/gloss_vocab.json") as f:
+    with (PROJECT_DIR / "models/recognition/gloss_vocab.json").open() as f:
         vocab_dict = json.load(f)
 
         if "id_to_gloss" in vocab_dict:
@@ -62,7 +69,7 @@ try:
         dropout=0.0
     )
     
-    model_path = Path("models/recognition/best_model.pt")
+    model_path = PROJECT_DIR / "models/recognition/best_model.pt"
     if model_path.exists():
         model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
         model.to(device)
@@ -78,10 +85,11 @@ except Exception as e:
 # Load Translator
 try:
     translator = ASLtoISLTranslator(
-        gloss_vocab_path="models/recognition/gloss_vocab.json",
-        grammar_rules_path="configs/grammar_rules.json",
-        config_path="configs/translation.yaml",
-        quantize=True
+        gloss_vocab_path=str(PROJECT_DIR / "models/recognition/gloss_vocab.json"),
+        grammar_rules_path=str(PROJECT_DIR / "configs/grammar_rules.json"),
+        config_path=str(PROJECT_DIR / "configs/translation.yaml"),
+        quantize=True,
+        enable_llm=os.getenv("AITE_ENABLE_LLM", "false").lower() == "true",
     )
     print("✓ Translation module loaded successfully")
 except Exception as e:
@@ -100,7 +108,50 @@ def root_page():
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "project": "ASL-ISL Translation Engine (AITE)", "model_loaded": model is not None}
+    return {"status": "ok", "project": "ASL-ISL Translation Engine (AITE)", "model_loaded": model is not None, "avatar_mode": "illustrative_2d"}
+
+
+def _render_avatar_frame(glosses: list[str], frame_number: int, frame_count: int) -> np.ndarray:
+    """Render a lightweight, clearly labelled 2D demo avatar without external assets."""
+    canvas = np.full((480, 854, 3), (28, 24, 20), dtype=np.uint8)
+    progress = frame_number / max(frame_count - 1, 1)
+    active = min(int(progress * len(glosses)), len(glosses) - 1)
+    pulse = int(12 * np.sin(progress * np.pi * 4))
+    # torso, head, and moving arms
+    cv2.ellipse(canvas, (427, 360), (122, 170), 0, 180, 360, (80, 134, 201), -1)
+    cv2.circle(canvas, (427, 165), 73, (145, 183, 225), -1)
+    shoulder_y = 270
+    swing = int(75 * np.sin(progress * np.pi * 6))
+    cv2.line(canvas, (355, shoulder_y), (275, 350 + swing), (145, 183, 225), 28)
+    cv2.line(canvas, (499, shoulder_y), (579, 350 - swing), (145, 183, 225), 28)
+    cv2.circle(canvas, (275, 350 + swing), 20 + pulse // 4, (182, 211, 241), -1)
+    cv2.circle(canvas, (579, 350 - swing), 20 + pulse // 4, (182, 211, 241), -1)
+    cv2.putText(canvas, "AITE 2D AVATAR DEMO", (35, 50), cv2.FONT_HERSHEY_SIMPLEX, .75, (236, 221, 173), 2, cv2.LINE_AA)
+    cv2.putText(canvas, "ISL GLOSS", (35, 412), cv2.FONT_HERSHEY_SIMPLEX, .55, (200, 200, 200), 1, cv2.LINE_AA)
+    cv2.putText(canvas, glosses[active][:28], (35, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+    return canvas
+
+
+@app.post("/generate-avatar")
+async def generate_avatar(body: dict):
+    """Produce a playable illustrative 2D avatar video for the translated ISL gloss."""
+    isl_gloss = str(body.get("isl_gloss") or body.get("gloss") or "").strip()
+    glosses = isl_gloss.split()
+    if not glosses:
+        return JSONResponse({"error": "Missing or empty isl_gloss"}, status_code=400)
+    glosses = glosses[:20]
+    filename = f"avatar-{uuid.uuid4().hex}.mp4"
+    output_path = GENERATED_DIR / filename
+    fps, frame_count = 12, max(24, len(glosses) * 12)
+    writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (854, 480))
+    if not writer.isOpened():
+        return JSONResponse({"error": "Unable to initialise video encoder"}, status_code=500)
+    try:
+        for frame_number in range(frame_count):
+            writer.write(_render_avatar_frame(glosses, frame_number, frame_count))
+    finally:
+        writer.release()
+    return {"video_url": f"/generated/{filename}", "mime_type": "video/mp4", "mode": "illustrative_2d"}
 
 @app.post("/extract-keypoints")
 async def extract_keypoints(file: UploadFile = File(...)):

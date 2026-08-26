@@ -1,0 +1,12 @@
+.git
+.venv
+venv
+Dataset
+docs
+monthly_reports
+tests
+scripts
+__pycache__
+*.pyc
+qa_report.csv
+demo.mp4

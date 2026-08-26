@@ -28,6 +28,7 @@ class ASLtoISLTranslator:
         model_id: str = "meta-llama/Llama-2-7b-chat-hf",
         quantize: bool = True,
         device: Optional[str] = None,
+        enable_llm: bool = False,
     ):
         """
         Initialize the ASL→ISL translator.
@@ -55,29 +56,32 @@ class ASLtoISLTranslator:
         # when model weights are unavailable (for example, in an offline demo).
         self.tokenizer = None
         self.model = None
-        try:
-            logger.info(f"Loading tokenizer from {model_id}...")
-            self.tokenizer = AutoTokenizer.from_pretrained(model_id)
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-            logger.info(f"Loading model from {model_id} (quantize={quantize})...")
-            if quantize:
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    model_id,
-                    load_in_4bit=True,
-                    device_map=self.device,
-                )
-            else:
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    model_id,
-                    device_map=self.device,
-                )
-            self.model.eval()
-            logger.info("✓ Model loaded successfully")
-        except Exception as e:
-            logger.error(f"Failed to load model: {e}")
-            logger.warning("Translator will fall back to rule-based translation only")
-            self.tokenizer = None
-            self.model = None
+        if not enable_llm:
+            logger.info("LLM loading is disabled; using the deterministic rule-based translator")
+        else:
+            try:
+                logger.info(f"Loading tokenizer from {model_id}...")
+                self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+                logger.info(f"Loading model from {model_id} (quantize={quantize})...")
+                if quantize:
+                    self.model = AutoModelForCausalLM.from_pretrained(
+                        model_id,
+                        load_in_4bit=True,
+                        device_map=self.device,
+                    )
+                else:
+                    self.model = AutoModelForCausalLM.from_pretrained(
+                        model_id,
+                        device_map=self.device,
+                    )
+                self.model.eval()
+                logger.info("✓ Model loaded successfully")
+            except Exception as e:
+                logger.error(f"Failed to load model: {e}")
+                logger.warning("Translator will fall back to rule-based translation only")
+                self.tokenizer = None
+                self.model = None
 
         # Hyperparameters from config
         self.max_length = self.config.get("model", {}).get("max_length", 128)
