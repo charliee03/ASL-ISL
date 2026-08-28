@@ -20,7 +20,7 @@
 
 ## Project Status
 
-> **Current Phase:** Weeks 5-8 complete (ASL Recognition, ASL-ISL Translation, GAN Avatar Generation)
+> **Current Phase:** All pipeline stages complete — Recognition, Translation, 2D Skeletal Generation, Web UI, Docker deployment, and QA testing.
 
 ---
 
@@ -36,9 +36,9 @@ Input (Video) → Preprocessing → ASL Recognition → Cross-lingual Translatio
 
 ### Stages
 
-1. **Sign Recognition** — Transformer-based model (trained on MSASL) extracts ASL gloss/text from video frames using MediaPipe hand keypoints.
-2. **Cross-Lingual Translation** — Lightweight quantized LLM transforms ASL grammar/syntax to ISL.
-3. **Sign Generation** — GAN-based avatar renders ISL signs in real-time (≥15 FPS).
+1. **Sign Recognition** — Transformer-based model (trained on WLASL) extracts ASL gloss/text from video frames using MediaPipe hand keypoints.
+2. **Cross-Lingual Translation** — Rule-based grammar engine with optional quantized LLM (Llama-2-7b) transforms ASL grammar/syntax to ISL.
+3. **Sign Generation** — 2D skeletal avatar synthesizer renders ISL signs from keypoint data in real-time (≥150 FPS).
 
 ---
 
@@ -47,21 +47,27 @@ Input (Video) → Preprocessing → ASL Recognition → Cross-lingual Translatio
 ```
 ASL-ISL/
 ├── src/
+│   ├── api/                # FastAPI server (REST endpoints)
 │   ├── recognition/        # ASL sign recognition (Transformer + MediaPipe)
-│   ├── translation/        # ASL → ISL grammar translation (LLM)
-│   ├── generation/         # GAN-based avatar animation
-│   ├── web/                # Web application
+│   ├── translation/        # ASL → ISL grammar translation (rules + LLM)
+│   ├── generation/         # 2D skeletal avatar animation
+│   ├── web/                # Web UI (vanilla HTML/CSS/JS)
 │   └── utils/              # Preprocessing, feature extraction, helpers
 ├── data/
 │   ├── msasl/              # MSASL dataset (sign videos, glosses)
-│   └── isl/                # INCLUDE dataset
-├── scripts/                # Jupyter notebooks for exploration & training
+│   ├── wlasl/              # WLASL dataset
+│   ├── isl/                # ISL keypoints & INCLUDE dataset
+│   └── paired/             # Paired ASL-ISL data
+├── scripts/                # Training, evaluation & QA scripts
 ├── configs/                # Model & pipeline configuration files
 ├── models/                 # Trained model checkpoints
 ├── docs/                   # Documentation, literature review, IEEE paper
 │   ├── monthly_reports/    # Project progress and monthly status reports
 │   └── jira_backlog_import.csv # Jira tasks export
 ├── tests/                  # Unit and integration tests
+├── Dockerfile              # Docker containerisation
+├── .dockerignore
+├── .gitignore
 ├── requirements.txt        # Python dependencies
 └── README.md
 ```
@@ -80,9 +86,9 @@ ASL-ISL/
 ## Tech Stack
 
 **Languages:** Python, JavaScript  
-**Frameworks:** PyTorch / TensorFlow, MediaPipe, Hugging Face Transformers, OpenCV  
-**Frontend:** React + Node.js  
-**Infrastructure:** GPU-enabled systems, optional cloud (AWS/GCP)
+**Frameworks:** PyTorch, MediaPipe, Hugging Face Transformers, OpenCV, FastAPI  
+**Frontend:** Vanilla HTML / CSS / JavaScript  
+**Infrastructure:** CPU or GPU-enabled systems, Docker, optional cloud (Render / HF Spaces)
 
 ---
 
@@ -94,7 +100,7 @@ ASL-ISL/
 | 3–4 | MediaPipe integration, hand keypoint extraction |
 | 5–6 | Train Transformer for ASL recognition, evaluate (WER) |
 | 7–8 | Translation module (ASL → ISL), grammar rule implementation |
-| 9+ | Avatar generation (GAN), web integration, testing, IEEE paper |
+| 9+ | 2D skeletal avatar generation, Web UI, Docker, QA testing, IEEE paper |
 
 ---
 
@@ -138,7 +144,7 @@ See full table in [`docs/literature_review.md`](docs/literature_review.md).
 ## Getting Started
 
 ```bash
-git clone https://github.com/your-org/ASL-ISL.git
+git clone https://github.com/charliee03/ASL-ISL.git
 cd ASL-ISL
 pip install -r requirements.txt
 ```
@@ -152,6 +158,37 @@ python -m src.api.server
 ```
 
 The application will be available at `http://localhost:8000`.
+
+### Docker
+
+```bash
+docker build -t aite:local .
+docker run --rm -p 8000:8000 aite:local
+```
+
+See [`docs/deployment.md`](docs/deployment.md) for hosting and defense-recording details.
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Web UI |
+| `GET` | `/health` | Health check (model status) |
+| `POST` | `/extract-keypoints` | Extract hand keypoints from an image |
+| `POST` | `/predict-gloss` | Predict ASL gloss from a single frame |
+| `POST` | `/predict-sequence` | Predict ASL gloss from a video clip |
+| `POST` | `/translate` | Translate ASL gloss to ISL gloss |
+| `POST` | `/generate-avatar` | Generate ISL avatar animation video |
+
+### QA Testing
+
+Run the end-to-end QA harness against 20 MS-ASL clips:
+
+```bash
+python scripts/run_qa.py
+```
+
+This produces a `qa_report.csv` with per-clip recognition, translation, and avatar generation results.
 
 ---
 
