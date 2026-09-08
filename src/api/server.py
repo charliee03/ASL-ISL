@@ -62,7 +62,7 @@ try:
     vocab_size = len(gloss_vocab)
     model = SignRecognitionTransformer(
         num_keypoints=27, 
-        d_model=128, 
+        d_model=256, 
         nhead=4, 
         num_encoder_layers=3, 
         vocab_size=vocab_size,
@@ -132,26 +132,6 @@ def _render_avatar_frame(glosses: list[str], frame_number: int, frame_count: int
     return canvas
 
 
-@app.post("/generate-avatar")
-async def generate_avatar(body: dict):
-    """Produce a playable illustrative 2D avatar video for the translated ISL gloss."""
-    isl_gloss = str(body.get("isl_gloss") or body.get("gloss") or "").strip()
-    glosses = isl_gloss.split()
-    if not glosses:
-        return JSONResponse({"error": "Missing or empty isl_gloss"}, status_code=400)
-    glosses = glosses[:20]
-    filename = f"avatar-{uuid.uuid4().hex}.mp4"
-    output_path = GENERATED_DIR / filename
-    fps, frame_count = 12, max(24, len(glosses) * 12)
-    writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (854, 480))
-    if not writer.isOpened():
-        return JSONResponse({"error": "Unable to initialise video encoder"}, status_code=500)
-    try:
-        for frame_number in range(frame_count):
-            writer.write(_render_avatar_frame(glosses, frame_number, frame_count))
-    finally:
-        writer.release()
-    return {"video_url": f"/generated/{filename}", "mime_type": "video/mp4", "mode": "illustrative_2d"}
 
 @app.post("/extract-keypoints")
 async def extract_keypoints(file: UploadFile = File(...)):
