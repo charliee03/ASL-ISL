@@ -21,6 +21,8 @@ from src.recognition.model import SignRecognitionTransformer
 from src.translation.translator import ASLtoISLTranslator
 # pyrefly: ignore [missing-import]
 from src.generation.animate import process_file
+# pyrefly: ignore [missing-import]
+from src.generation.fingerspell import build_fingerspell_sequence
 
 app = FastAPI(title="AITE API", version="0.1.0")
 app.add_middleware(
@@ -327,6 +329,61 @@ async def generate_avatar(body: dict):
             raw_path.unlink(missing_ok=True)
             print(f"Landmark avatar fallback for {asset_gloss}: {error}")
     if mode == "illustrative_2d":
+        # --- Fingerspelling fallback -------------------------------------------
+        # For each gloss token that has no recorded word-level sign, build a
+        # letter-by-letter fingerspell sequence from alpha_keypoints and stitch
+        # them all together into one video.
+        combined_frames: list = []
+        combined_fps: float = 25.0
+        inter_word_hold: int = 8  # ~320 ms pause between words at 25 fps
+        import json as _json
+        for token in glosses:
+            token_lower = AVATAR_ALIASES.get(token.lower(), token.lower())
+
+            # 1. Try LANDMARK_ASSETS (populated from metadata.json when present)
+            word_data = None
+            if token_lower in LANDMARK_ASSETS:
+                try:
+                    word_data = _json.loads(LANDMARK_ASSETS[token_lower][0].read_text(encoding="utf-8"))
+                except Exception as _err:
+                    print(f"Fingerspell pipeline: LANDMARK_ASSETS load failed for {token_lower!r}: {_err}")
+
+            # 2. Direct filename fallback — covers the common case where metadata.json
+            #    is absent but e.g. data/isl/keypoints/hello.json exists
+            if word_data is None:
+                direct_path = LANDMARK_DIR / f"{token_lower}.json"
+                if direct_path.is_file():
+                    try:
+                        word_data = _json.loads(direct_path.read_text(encoding="utf-8"))
+                    except Exception as _err:
+                        print(f"Fingerspell pipeline: direct keypoint load failed for {token_lower!r}: {_err}")
+
+            if word_data is not None:
+                # Recorded sign found — splice its frames in
+                combined_fps = float(word_data.get("fps", combined_fps))
+                combined_frames.extend(word_data["frames"])
+                if word_data["frames"]:
+                    combined_frames.extend([word_data["frames"][-1]] * inter_word_hold)
+            else:
+                # Truly unknown word — fingerspell it letter by letter
+                fs_data = build_fingerspell_sequence(token_lower)
+                if fs_data and fs_data["frames"]:
+                    combined_fps = float(fs_data.get("fps", combined_fps))
+                    combined_frames.extend(fs_data["frames"])
+                    combined_frames.extend([fs_data["frames"][-1]] * inter_word_hold)
+        if combined_frames:
+            try:
+                process_file(
+                    {"fps": combined_fps, "frames": combined_frames},
+                    save_video=str(raw_path),
+                    no_show=True,
+                    override_text=isl_gloss,
+                )
+                mode = "fingerspell"
+            except (OSError, ValueError, KeyError, IndexError) as error:
+                raw_path.unlink(missing_ok=True)
+                print(f"Fingerspell avatar failed: {error}")
+    if mode == "illustrative_2d":
         fps, frame_count = 12, max(24, len(glosses) * 12)
         writer = cv2.VideoWriter(str(raw_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (854, 480))
         if not writer.isOpened():
@@ -408,8 +465,9 @@ async def predict_sequence(file: UploadFile = File(...)):
             tmp_path = Path(tmp.name)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".npz") as tmp_output:
             output_path = Path(tmp_output.name)
+        import sys as _sys
         command = [
-            str(PROJECT_DIR / ".venv-cslrt/bin/python"),
+            _sys.executable,
             str(PROJECT_DIR / "scripts/extract_msasl_single_video.py"),
             "--input-video", str(tmp_path),
             "--output-file", str(output_path),
