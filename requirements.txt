@@ -1,19 +1,38 @@
+# Core ML
 torch>=2.0.0
 torchvision>=0.15.0
+transformers>=4.35.0
+accelerate>=0.25.0
+
+# Vision & MediaPipe
 mediapipe>=0.10.9
 opencv-python>=4.8.0
-transformers>=4.35.0
-numpy>=1.24.0
+
+# Data & Utilities
+numpy>=1.24.0,<2
 scipy>=1.10.0
+pandas>=2.0.0
 matplotlib>=3.7.0
 scikit-learn>=1.2.0
-ffmpeg-python>=0.2.0
+tqdm>=4.65.0
+PyYAML>=6.0
+
+# Evaluation
 evaluate>=0.4.0
 sacrebleu>=2.3.0
 jiwer>=3.0.0
-tqdm>=4.65.0
-wandb>=0.15.0
+
+# API Server
 fastapi>=0.100.0
 uvicorn>=0.22.0
 python-multipart>=0.0.6
+
+# Media
+ffmpeg-python>=0.2.0
+
+# Optional: required only when AITE_ENABLE_LLM=true (4-bit quantisation)
+bitsandbytes>=0.41.0
+
+# Dev / Testing
 pytest>=7.0.0
+wandb>=0.15.0

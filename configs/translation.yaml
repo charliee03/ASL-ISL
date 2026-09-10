@@ -3,10 +3,19 @@ model:
   model_id: meta-llama/Llama-2-7b-chat-hf
   quantize: true
   max_length: 128
+  temperature: 0.7
+  top_p: 0.9
+  device: auto
+
+grammar:
+  rules_path: configs/grammar_rules.json
+  filter_filler_words: true
+  enable_rule_based_fallback: true
 
 data:
   dataset: isl-cslgr
   batch_size: 16
+  gloss_vocab_path: models/recognition/gloss_vocab.json
 
 training:
   epochs: 20
@@ -15,3 +24,4 @@ training:
 
 evaluation:
   metric: bleu
+  test_set_path: data/translation_pairs_test.json
