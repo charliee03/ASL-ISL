@@ -20,12 +20,16 @@
 
 ## Project Status
 
+Start with the [IEEE paper-writing handoff](docs/IEEE_PAPER_HANDOFF.md) for current
+scope, results, reproduction, open issues and teammate sharing instructions
+(11 September 2026). `docs/main.tex` is editable; the existing PDF is outdated.
+
 > **Current phase:** Research prototype with a validated MSASL-100 isolated-sign
 > recognizer and limited recorded-pose playback. ASL-to-ISL translation and
 > generative avatar work are not production-ready.
 
 See [Project Status, Reproduction Guide, and Roadmap](docs/PROJECT_STATUS_AND_ROADMAP.md)
-for the authoritative list of completed changes, measured model results, current
+for the historical list of completed changes, measured model results, earlier
 limitations, reproducible commands, and prioritized future work.
 
 ---
@@ -52,9 +56,11 @@ Input (Video) → Preprocessing → ASL Recognition → Cross-lingual Translatio
    available behind an explicit feature flag. It is not a continuous ASL recognizer
    and does not cover signs outside its fixed vocabulary.
 2. **Cross-Lingual Translation** — A deterministic draft rule layer is available;
-   the optional Llama model is disabled and ISL expert review is still required.
+   optional Gemini and Llama refinement are disabled by default. No provider
+   accuracy gain is established; ISL expert review is still required.
 3. **Sign Generation** — The demo retrieves recorded 2D landmark motion. A trained
-   pose generator/GAN and realistic avatar have not been completed.
+   text-conditioned pose generator/GAN and realistic avatar have not been completed.
+   An offline motion-reconstruction baseline is separate from playback.
 
 ---
 
@@ -65,14 +71,14 @@ ASL-ISL/
 ├── src/
 │   ├── recognition/        # ASL sign recognition (Transformer + MediaPipe)
 │   ├── translation/        # ASL → ISL grammar translation (LLM)
-│   ├── generation/         # GAN-based avatar animation
+│   ├── generation/         # 2D playback, fingerspelling and reconstruction
 │   ├── web/                # Web application
 │   └── utils/              # Preprocessing, feature extraction, helpers
 ├── data/
 │   ├── asl/                # Validated derived MSASL features and splits
 │   └── isl/                # INCLUDE-50 and ISL-CSLRT derived data
 ├── Dataset/MS-ASL/         # Local MSASL annotations/videos (not for deployment)
-├── scripts/                # Jupyter notebooks for exploration & training
+├── scripts/                # Data processing, training, evaluation and evidence tools
 ├── configs/                # Model & pipeline configuration files
 ├── models/                 # Trained model checkpoints
 ├── docs/                   # Documentation, literature review, IEEE paper

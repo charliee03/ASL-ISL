@@ -1,0 +1,19 @@
+model:
+  num_frames: 48
+  num_keypoints: 75
+  hidden_dim: 192
+  latent_dim: 96
+data:
+  keypoints_dir: data/isl/cslrt_keypoints
+  train_signers: ["1", "2", "3", "4", "5"]
+  validation_signers: ["6"]
+  test_signers: ["7"]
+training:
+  seed: 42
+  epochs: 50
+  batch_size: 16
+  lr: 0.001
+  weight_decay: 0.0001
+  patience: 10
+  velocity_loss_weight: 0.2
+  checkpoint_dir: models/isl_motion_autoencoder

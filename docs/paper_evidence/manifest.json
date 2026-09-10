@@ -1,0 +1,808 @@
+{
+  "generated_at_utc": "2026-09-10T22:36:08.795548+00:00",
+  "git_head": "fe589f7a9a2bf4f78822d8976014fd320ac164c5",
+  "git_status_porcelain": [
+    "M  .gitignore",
+    "M  README.md",
+    "A  configs/isl_motion_autoencoder.yaml",
+    "A  configs/msasl126_include50_candidate_recognition.yaml",
+    "A  configs/msasl_include50_candidate_glosses.json",
+    "A  docs/ASL_ISL_MAPPING_REVIEW_GUIDE.md",
+    "A  docs/ASL_ISL_MAPPING_REVIEW_TEMPLATE.csv",
+    "M  docs/ASL_ISL_PLAYBACK_MAPPING_AUDIT.md",
+    "A  docs/DATASET_ACQUISITION_DECISION.md",
+    "A  docs/DEMO_RUNBOOK.md",
+    "A  docs/DEMO_VALIDATION_LOG_TEMPLATE.csv",
+    "A  docs/IEEE_PAPER_HANDOFF.md",
+    "M  docs/PROJECT_STATUS_AND_ROADMAP.md",
+    "M  docs/TRANSLATION.md",
+    "AM docs/TRANSLATION_LEGACY.md",
+    "M  docs/deployment.md",
+    "M  docs/main.tex",
+    "A  docs/msasl126_candidate_class_metrics.json",
+    "A  docs/paper_evidence/README.md",
+    "A  docs/paper_evidence/VERIFICATION.md",
+    "A  docs/paper_evidence/manifest.json",
+    "A  docs/paper_evidence/metrics.json",
+    "A  docs/paper_evidence/recognition_results.csv",
+    "A  docs/paper_sources.bib",
+    "M  docs/refs.bib",
+    "M  requirements.txt",
+    "A  scripts/build_isign_group_splits.py",
+    "M  scripts/build_msasl_splits.py",
+    "AM scripts/export_paper_evidence.py",
+    "M  scripts/extract_msasl_landmarks.py",
+    "A  scripts/report_candidate_class_metrics.py",
+    "M  scripts/train_cslrt_recognition.py",
+    "A  scripts/train_motion_autoencoder.py",
+    "M  src/api/server.py",
+    "A  src/generation/motion_autoencoder.py",
+    "M  src/translation/translator.py",
+    "M  src/web/app.js",
+    "M  src/web/index.html",
+    "M  src/web/styles.css",
+    "M  tests/test_api_contract.py",
+    "A  tests/test_fingerspell.py",
+    "A  tests/test_isign_group_splits.py",
+    "A  tests/test_motion_autoencoder.py",
+    "M  tests/test_translation.py"
+  ],
+  "missing_expected_artifacts": [],
+  "files": [
+    {
+      "path": "configs/avatar_gloss_map.json",
+      "bytes": 1811,
+      "sha256": "cf3795cb15801ec4d0bff19320fb3abac2693254dedd005504565b75553d671c"
+    },
+    {
+      "path": "configs/cslrt_recognition.yaml",
+      "bytes": 478,
+      "sha256": "43df01587c5391d428fd2597f284380d05237ca5bf1095cdfdedfd19541f5bd0"
+    },
+    {
+      "path": "configs/cslrt_recognition_v3.yaml",
+      "bytes": 494,
+      "sha256": "cf8eb4662a673056914f584fe5ba2059a08e355c33ad241b3bc07d8d1735634c"
+    },
+    {
+      "path": "configs/cslrt_word_recognition.yaml",
+      "bytes": 533,
+      "sha256": "3aec731a48bbc56103762db9427feafa6ccfeafa76dde0c2c42e95cd72c9e533"
+    },
+    {
+      "path": "configs/generation.yaml",
+      "bytes": 278,
+      "sha256": "db60b8dbb190533267925f8f444bffee15bf09923757d5f8921424d9630ce1d8"
+    },
+    {
+      "path": "configs/grammar_rules.json",
+      "bytes": 2597,
+      "sha256": "d4e0f4b1090b07007fd91f112bb136f936b239fd478afe0a8b19946a726f8e42"
+    },
+    {
+      "path": "configs/isl_motion_autoencoder.yaml",
+      "bytes": 397,
+      "sha256": "82a4a2aed758c49827b6dda7d0068baa495c56eabe32ee9ad2fa16f18a87b026"
+    },
+    {
+      "path": "configs/isl_vocabulary.json",
+      "bytes": 109273,
+      "sha256": "2501e3f47f4d93e33aeaff1f8053366d6535e521f8fb06bac9d57f9bb27e925d"
+    },
+    {
+      "path": "configs/msasl100_pose_balanced_large_recognition.yaml",
+      "bytes": 730,
+      "sha256": "cb850101cfddefdea0c658faca5b8853819fc364f63a3a9c7859a4c2618d065d"
+    },
+    {
+      "path": "configs/msasl100_pose_balanced_recognition.yaml",
+      "bytes": 776,
+      "sha256": "60f0bc0487920f22148feddf41a28201bdb3f1fc5f58ba797db9127d537fe845"
+    },
+    {
+      "path": "configs/msasl100_pose_recognition.yaml",
+      "bytes": 634,
+      "sha256": "edb93aa75a2d4f1a6064e29d3449b02d566ca7ae62673b4864858b1c511ba5ab"
+    },
+    {
+      "path": "configs/msasl126_include50_candidate_recognition.yaml",
+      "bytes": 802,
+      "sha256": "553ffec973684d6d6b55cc12698d04afe05c725948f571881368dced39cf6055"
+    },
+    {
+      "path": "configs/msasl_include50_candidate_glosses.json",
+      "bytes": 266,
+      "sha256": "14aba1d6afaab0108bf32a00adc163c541eb12001287f08cf80d7f9d1286c433"
+    },
+    {
+      "path": "configs/recognition.yaml",
+      "bytes": 413,
+      "sha256": "592aeb6dcc0fe3f4a782ca176e67745dcc47f8a5c914b7d0e83ac7c44b32fd3e"
+    },
+    {
+      "path": "configs/translation.yaml",
+      "bytes": 521,
+      "sha256": "2c549fa9e82f7aa0511bd37200b7246d6ac55ea515a7adb9685f7a78cb354f82"
+    },
+    {
+      "path": "data/asl/msasl100_splits/summary.json",
+      "bytes": 2630,
+      "sha256": "3b10237e94f6a06990c4910be4d33703c039ec9dad3fedc648de3b3d24d3e858"
+    },
+    {
+      "path": "data/asl/msasl100_splits/test.json",
+      "bytes": 244608,
+      "sha256": "fbdbb56839dda658475468f34f57cf8ab42f646f7163fd05379f516244b0c33c"
+    },
+    {
+      "path": "data/asl/msasl100_splits/train.json",
+      "bytes": 1286337,
+      "sha256": "9b35a197b855e8ecca1baff9f73e4b9622e8adfd4ce38dd0bf9cff7fca0d45b6"
+    },
+    {
+      "path": "data/asl/msasl100_splits/val.json",
+      "bytes": 302269,
+      "sha256": "8e0af4a8ee65ce213cded5a76e8d6484c8ef22dae255a4c29c7e2191527cef9c"
+    },
+    {
+      "path": "data/asl/msasl100_splits/vocabulary.json",
+      "bytes": 1092,
+      "sha256": "98d50a76b21f557c402a707392b1a1b7a033f69a2f02b4537ea900757c07f04c"
+    },
+    {
+      "path": "data/asl/msasl126_splits/summary.json",
+      "bytes": 2752,
+      "sha256": "523e36d528db3e5b2569cde03a82df812ca386fa16b96fc04510b02548ecc87e"
+    },
+    {
+      "path": "data/asl/msasl126_splits/test.json",
+      "bytes": 278682,
+      "sha256": "d71926bf9795f3ca06a01192a2ee02905a113c77932cc62f7d504ca7cc121036"
+    },
+    {
+      "path": "data/asl/msasl126_splits/train.json",
+      "bytes": 1435232,
+      "sha256": "d822243692e1768a7fae62e12065021df34a7d4969cc0db5917190dc143bca88"
+    },
+    {
+      "path": "data/asl/msasl126_splits/val.json",
+      "bytes": 342969,
+      "sha256": "21abdb786c51727c35532cda645c074712f95145aa7f714a99a81ef1f5c465be"
+    },
+    {
+      "path": "data/asl/msasl126_splits/vocabulary.json",
+      "bytes": 1378,
+      "sha256": "d5def84251d919ef123e0550cb979bb10f12c566409d71d81426999e5eff3398"
+    },
+    {
+      "path": "data/asl/msasl128_splits/summary.json",
+      "bytes": 2725,
+      "sha256": "f7ea4a696ebc78d10ef9dc2afad7bf62ec24d474f069c1469bc56b4a0f03a4c9"
+    },
+    {
+      "path": "data/asl/msasl128_splits/test.json",
+      "bytes": 279639,
+      "sha256": "d32338cc4fda44f3b34352abe922ec2c7f7ab3f7708c76f3284ca2d81a27f565"
+    },
+    {
+      "path": "data/asl/msasl128_splits/train.json",
+      "bytes": 1449526,
+      "sha256": "1a08d4f7fe039eb3f01f7760d0fd36cc4367df97289eb183490f0205bdaa8861"
+    },
+    {
+      "path": "data/asl/msasl128_splits/val.json",
+      "bytes": 343912,
+      "sha256": "8a42d285079dc5f2961ef63ce1d6ca76dcc1aa43d7928b683db4b1cd2bf4fd46"
+    },
+    {
+      "path": "data/asl/msasl128_splits/vocabulary.json",
+      "bytes": 1403,
+      "sha256": "3892d620095327998d05fd513d3ea1e925e80ebbb6cf01b1670c1696188bab97"
+    },
+    {
+      "path": "data/isl/cslrt_splits/summary.json",
+      "bytes": 913,
+      "sha256": "b42a74f6c38c4f197a68e3003381c8888d0f8afbd933c92567e17a3b195b1ebe"
+    },
+    {
+      "path": "data/isl/cslrt_splits/test.json",
+      "bytes": 22897,
+      "sha256": "ff6f6c6fb22ff26d8beefdd1bb19ca95b9e26876aa6c881ced89886bdb197482"
+    },
+    {
+      "path": "data/isl/cslrt_splits/train.json",
+      "bytes": 116830,
+      "sha256": "461e9a7fad694f247b7a57df5664a6795bc6015f5332d81e044b1a4f8bb1bc9b"
+    },
+    {
+      "path": "data/isl/cslrt_splits/val.json",
+      "bytes": 23620,
+      "sha256": "2b69b5872a73e67ad2e75d26f4c6984ff870b3dd1156f18084d9ac3aeac6c745"
+    },
+    {
+      "path": "data/isl/cslrt_splits/vocabulary.json",
+      "bytes": 2405,
+      "sha256": "6684bd1c6bc8860e32b5f643eb950b80bb40e2e86caef35a67f40d10fab7ecef"
+    },
+    {
+      "path": "data/isl/cslrt_word_splits/summary.json",
+      "bytes": 427,
+      "sha256": "2aab94199981d4f1c5861dffd49eb9bb5034066c631dbd9214841b59897d88f3"
+    },
+    {
+      "path": "data/isl/cslrt_word_splits/test.json",
+      "bytes": 27412,
+      "sha256": "efeb47f4f7cc378b5794899a6426f259fb87265f524bb9b4a0a7b1d94831a3fa"
+    },
+    {
+      "path": "data/isl/cslrt_word_splits/train.json",
+      "bytes": 113688,
+      "sha256": "d09788678044bbdb677ff19973da7fe7f9988433336f1cc91d61795f49d16e79"
+    },
+    {
+      "path": "data/isl/cslrt_word_splits/val.json",
+      "bytes": 27074,
+      "sha256": "d10fb9d969a7a38fdcab81d0d9cd58c8e4c62775f00a64f22327cc7b6d94ffe0"
+    },
+    {
+      "path": "data/isl/cslrt_word_splits/vocabulary.json",
+      "bytes": 1344,
+      "sha256": "a1f71a01392898e2b35e1eec42cccdf1c4355db041262781005b55d5ef667a4d"
+    },
+    {
+      "path": "docs/ASL_ISL_MAPPING_REVIEW_GUIDE.md",
+      "bytes": 2133,
+      "sha256": "41710cbc8af2d79a04bd071b6c1946cefcf5282b2d219ac2235fcc10cf08ece5"
+    },
+    {
+      "path": "docs/ASL_ISL_MAPPING_REVIEW_TEMPLATE.csv",
+      "bytes": 3137,
+      "sha256": "4a8b8f9e8ca21a7a2e2e3396756b1d2515a7cf3eb6af69fb3e3826bbf20b2153"
+    },
+    {
+      "path": "docs/DEMO_RUNBOOK.md",
+      "bytes": 2317,
+      "sha256": "3d2eaec5cf294976fc53682137989006848c9b0258d3f015f07faf89d12b68ad"
+    },
+    {
+      "path": "docs/DEMO_VALIDATION_LOG_TEMPLATE.csv",
+      "bytes": 923,
+      "sha256": "ce6fb306a6dc1d92efccb46d1cb666dd37753ff704fa1cb09408e81667ef4a11"
+    },
+    {
+      "path": "docs/IEEE_PAPER_HANDOFF.md",
+      "bytes": 23219,
+      "sha256": "ef08d3d39496cd4e47c7c6610cd29d602279385e7b2db044d8ae6812fd64b532"
+    },
+    {
+      "path": "docs/TRANSLATION.md",
+      "bytes": 3682,
+      "sha256": "00b7f56d39d70afebb2fd2b1522e11f9499e017793f65afb8ae1bed40a7757ac"
+    },
+    {
+      "path": "docs/main.tex",
+      "bytes": 8752,
+      "sha256": "e82d9f790356a3ed86f4e24054b35765b805f631e4d25b1a5e54d38bc8306e40"
+    },
+    {
+      "path": "docs/paper_evidence/VERIFICATION.md",
+      "bytes": 1646,
+      "sha256": "c9f36009ac6a48ba8078eb68b23d45e8b75d0d529f22aceeea4ba3bdc9ef2ae9"
+    },
+    {
+      "path": "docs/paper_sources.bib",
+      "bytes": 1180,
+      "sha256": "fdb8d4fec642a6c32d5fa501963c2f92bfc2f5505a56e21f920668b2d7b158a4"
+    },
+    {
+      "path": "models/cslrt_recognition_v3/best_model.pt",
+      "bytes": 3344053,
+      "sha256": "ca45c6898ee3d2e03d523a9df02466faaa7f911d3c798f3b65d0217686e083fa"
+    },
+    {
+      "path": "models/cslrt_recognition_v3/test_results.json",
+      "bytes": 44709,
+      "sha256": "4219cbdf504322f64b6f30130177886da984a135099faa421e3d374120089a59"
+    },
+    {
+      "path": "models/cslrt_recognition_v3/training_log.csv",
+      "bytes": 4237,
+      "sha256": "216ff0d3baab57afbcfcabcdc6d62be6495c6ab272687b22de5f307f9a889b8f"
+    },
+    {
+      "path": "models/cslrt_recognition_v3/vocabulary.json",
+      "bytes": 2405,
+      "sha256": "6684bd1c6bc8860e32b5f643eb950b80bb40e2e86caef35a67f40d10fab7ecef"
+    },
+    {
+      "path": "models/cslrt_word_recognition/best_model.pt",
+      "bytes": 622069,
+      "sha256": "71f6df7d16d5a3449183b21016f807e2d5abe250ef1c7152a31d7431f755b968"
+    },
+    {
+      "path": "models/cslrt_word_recognition/test_results.json",
+      "bytes": 64677,
+      "sha256": "b417582a9ff6e67c56755311163f236a489c61442aa6a2c8f52e1449b5cd0f91"
+    },
+    {
+      "path": "models/cslrt_word_recognition/training_log.csv",
+      "bytes": 4493,
+      "sha256": "d9a05eaa1dad3217b4b286f8d7e0cb224e93ceaafa7b3dbf6ae6e712c08b199d"
+    },
+    {
+      "path": "models/cslrt_word_recognition/vocabulary.json",
+      "bytes": 1344,
+      "sha256": "a1f71a01392898e2b35e1eec42cccdf1c4355db041262781005b55d5ef667a4d"
+    },
+    {
+      "path": "models/isl_motion_autoencoder/best_model.pt",
+      "bytes": 3099765,
+      "sha256": "c5fbd09d9c900b17bc5c66b1d035e04fd59df4be0ea2122fb5b76e3ad4339dd0"
+    },
+    {
+      "path": "models/isl_motion_autoencoder/evaluation.json",
+      "bytes": 12628,
+      "sha256": "569c26f5e27df65cce9fe7e097bafed8e6b4acbe9fbdc07bef9422f09373d656"
+    },
+    {
+      "path": "models/isl_motion_autoencoder/resolved_config.yaml",
+      "bytes": 415,
+      "sha256": "87f398cdc83b0b0231169ab0694b56273f87f6f439b4a11fed07a4a825e57451"
+    },
+    {
+      "path": "models/isl_motion_autoencoder/training_state.pt",
+      "bytes": 9318321,
+      "sha256": "236feea862258aa333e40cf25786ad199d719b9eb02af903741ad6d40224b393"
+    },
+    {
+      "path": "models/msasl100_pose_balanced_large_recognition/best_model.pt",
+      "bytes": 3497973,
+      "sha256": "78df47d97198999f6b6f6a29c68093aaeae1b2497c4db586a23725b312b6f26b"
+    },
+    {
+      "path": "models/msasl100_pose_balanced_large_recognition/calibration.json",
+      "bytes": 384,
+      "sha256": "deeacb950aa07d7ea829a70c38e2934e8a44470e529a0fbe5dd5b58aa2c30c95"
+    },
+    {
+      "path": "models/msasl100_pose_balanced_large_recognition/resolved_config.yaml",
+      "bytes": 647,
+      "sha256": "2c21fd07b3c255c00942b9e9755febdcf239d9894934a07948ea925664029e49"
+    },
+    {
+      "path": "models/msasl100_pose_balanced_large_recognition/runtime.json",
+      "bytes": 192,
+      "sha256": "b0b715b83b0063808538b65b26c684c35d464720956aea06abfff2dfc51ce08d"
+    },
+    {
+      "path": "models/msasl100_pose_balanced_large_recognition/test_results.json",
+      "bytes": 238479,
+      "sha256": "82e32f1f41dba8d7dca1164eaf595c61f92de81100500c736239e6387dc78274"
+    },
+    {
+      "path": "models/msasl100_pose_balanced_large_recognition/training_log.csv",
+      "bytes": 8212,
+      "sha256": "576186e0661a97d2f818a3f9b7f69e6261b4e2a3a58a77fc47f8a7d15f6d42a1"
+    },
+    {
+      "path": "models/msasl100_pose_balanced_large_recognition/val_results.json",
+      "bytes": 291200,
+      "sha256": "85af7d2cafb786ae11724518d893e92624caa9f83a9f3b75589118795bc4422f"
+    },
+    {
+      "path": "models/msasl100_pose_balanced_large_recognition/vocabulary.json",
+      "bytes": 1092,
+      "sha256": "98d50a76b21f557c402a707392b1a1b7a033f69a2f02b4537ea900757c07f04c"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/best_model.pt",
+      "bytes": 3511733,
+      "sha256": "76dafc1910da7f329d4007142055e5f4307aa1f008da03cfcc5549ddac02b3d2"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/calibration.json",
+      "bytes": 386,
+      "sha256": "b0b8aa91da4468de4199efbe343b65bcead4c62c43d311974bccb96f0d3e0186"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/resolved_config.yaml",
+      "bytes": 647,
+      "sha256": "bb99db4991498fecf3ad5a2458dadf39916608ddde4a9f8e5e32a12dd2c6c9bb"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/runtime.json",
+      "bytes": 192,
+      "sha256": "335045df5fe0e52c0352366cc8e0d1dd3d2c845d47159f76a4af41e1b971b8f9"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/test_results.json",
+      "bytes": 272165,
+      "sha256": "f46f95ca7233332e0be5474c9177c9bc10e96c6ac0b048a771485d53a67b56d8"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/training_log.csv",
+      "bytes": 8235,
+      "sha256": "0df3b10616ff2bedb57b5448e0222f69ba27eacec4392c1e12b3f8b9ac678437"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/training_state.pt",
+      "bytes": 9518751,
+      "sha256": "f4f52017291270332f47ff11f2ea0c5e7b00d5675698be4c5e7c96b3d5d23510"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/val_results.json",
+      "bytes": 331634,
+      "sha256": "1e87a99daee6d772435bdfeffb044ec6994439456907c53c28cb8475d5ed6a71"
+    },
+    {
+      "path": "models/msasl126_include50_candidate_recognition/vocabulary.json",
+      "bytes": 1378,
+      "sha256": "d5def84251d919ef123e0550cb979bb10f12c566409d71d81426999e5eff3398"
+    },
+    {
+      "path": "requirements.txt",
+      "bytes": 802,
+      "sha256": "d242319feded3281043f189d18684b62aefc6858ab19a36227b632f1fe41b167"
+    },
+    {
+      "path": "scripts/add_cslrt_hand_landmarks.py",
+      "bytes": 2961,
+      "sha256": "87b8681e57560430e6ad6cb52468e912b025ed7534194fbc82f4ec04c822b39c"
+    },
+    {
+      "path": "scripts/audit_msasl_include50_coverage.py",
+      "bytes": 3551,
+      "sha256": "dcd609596dbc79c782acb2661ab98784bdb1d4808bc6fefe4ede2d745e2cecd8"
+    },
+    {
+      "path": "scripts/benchmark_latency.py",
+      "bytes": 2747,
+      "sha256": "09ffacdd49e1832b2a5286421a3b943852c197db78b28d8092b528174190066e"
+    },
+    {
+      "path": "scripts/build_cache.py",
+      "bytes": 3133,
+      "sha256": "5836894adb9dacf7e22ad22d56912c2c5da649bd482bb506e94c4159e0caa509"
+    },
+    {
+      "path": "scripts/build_cslrt_splits.py",
+      "bytes": 4487,
+      "sha256": "74bff523c159355a478b26b680b88c06583d1197503ab8ecab781aa2442df6c5"
+    },
+    {
+      "path": "scripts/build_cslrt_word_splits.py",
+      "bytes": 2851,
+      "sha256": "8f782d15f412351df9b4866a7d0d0722527274fc27fe88d16c91c1fd7e7ae88f"
+    },
+    {
+      "path": "scripts/build_isign_group_splits.py",
+      "bytes": 3003,
+      "sha256": "4200458bd7f49d1e7b61f4c29d728f533193ca6d890e4765739e90cd6a5d449f"
+    },
+    {
+      "path": "scripts/build_msasl_splits.py",
+      "bytes": 5211,
+      "sha256": "9c1db7a199fd798ff14f7cf41766c2370dd6555ae8b19c84651d8afdaf7de536"
+    },
+    {
+      "path": "scripts/calibrate_msasl_recognition.py",
+      "bytes": 3192,
+      "sha256": "bfcbf6c631ac35f84f23e3bf1707b873f6a256fc1733e4632b5359661e823b82"
+    },
+    {
+      "path": "scripts/diagnose_mediapipe.py",
+      "bytes": 1014,
+      "sha256": "96a98286fbfafa0ac3d3ec56002e23e53971980b0ee3f0541c01a64dea91423e"
+    },
+    {
+      "path": "scripts/download_include50.py",
+      "bytes": 1577,
+      "sha256": "76d937298b4d6e25764623a2ca5b7497fd2a177a61c7f3a47f84a8114b6628bf"
+    },
+    {
+      "path": "scripts/eval_translation.py",
+      "bytes": 8757,
+      "sha256": "ae77890e222abcd3e6cf9d371e3b2348ba05eb0d233baa7d9959ba61179c9abe"
+    },
+    {
+      "path": "scripts/evaluate_cslrt_recognition.py",
+      "bytes": 10117,
+      "sha256": "ed3a310ca192f3b937c384d1612546bdbeddab8de4edc0b008b162bb4459dcb0"
+    },
+    {
+      "path": "scripts/evaluate_recognition.py",
+      "bytes": 13081,
+      "sha256": "0dcfd89aa2e22f0c72bb2aae737074d3132a4b6cc2de40530b799c789189ae20"
+    },
+    {
+      "path": "scripts/export_gloss_vocab.py",
+      "bytes": 2829,
+      "sha256": "4388ef7869481be7ad4d038bc714f99f16faade59c834f03156ca666ec189a24"
+    },
+    {
+      "path": "scripts/export_paper_evidence.py",
+      "bytes": 4431,
+      "sha256": "283b63cd6d9f39de9314eebea91245cff3678b953f24f9329e55564ba127bb21"
+    },
+    {
+      "path": "scripts/extract_cslrt_landmarks.py",
+      "bytes": 8409,
+      "sha256": "90221abfb6408b671f031d513daa502e7e088a5448ff3751304b127e685547fe"
+    },
+    {
+      "path": "scripts/extract_cslrt_word_landmarks.py",
+      "bytes": 5256,
+      "sha256": "660156c5d01ada6bc0b7c64570346214cd13c35cbb8b7d83edbb4072a24d5f2b"
+    },
+    {
+      "path": "scripts/extract_isl_landmarks.py",
+      "bytes": 7428,
+      "sha256": "378391eac6ed5d706fbedb46f98a1b59b41f384637a618d0a45f4573781ad0bb"
+    },
+    {
+      "path": "scripts/extract_msasl_landmarks.py",
+      "bytes": 14245,
+      "sha256": "69124d7bd96cf0c23f721005c5b0be3ec2442bc0bd5be958701a2a676c8156ba"
+    },
+    {
+      "path": "scripts/extract_msasl_single_video.py",
+      "bytes": 1870,
+      "sha256": "29dd6e066d56dcdd506bc7effb2ef16ec0456f3e031e7d5d9a12c5b9f3b3a549"
+    },
+    {
+      "path": "scripts/monitor_progress.py",
+      "bytes": 1146,
+      "sha256": "d77bc54e11e43eeec77b8c2859124ec12546a6aae598be214fcadfb2c7f9e49d"
+    },
+    {
+      "path": "scripts/rebuild_msasl_metadata.py",
+      "bytes": 3262,
+      "sha256": "b6ffd828de85546183c23058ceb5c7a63df2559eab73bdebfa893b141bad0642"
+    },
+    {
+      "path": "scripts/report_candidate_class_metrics.py",
+      "bytes": 2147,
+      "sha256": "90e2913c356e90e494672a8484e4d571487da54f9f8eece4f471ab542c5babad"
+    },
+    {
+      "path": "scripts/run_qa.py",
+      "bytes": 5382,
+      "sha256": "93a4eaeca06a0bbb21add91460dc8adbfd1e03a801f07b2c11b733f63def044e"
+    },
+    {
+      "path": "scripts/setup_datasets.py",
+      "bytes": 2415,
+      "sha256": "1e719c0ff67e267db0921a3cbce0cdff3187c9efa751e0bc6b31a5f0ee54ee43"
+    },
+    {
+      "path": "scripts/train_cslrt_recognition.py",
+      "bytes": 10343,
+      "sha256": "350d24c3129ffd27289645345999ca6bb4b9cad07f2632db3c4a813dceb67f86"
+    },
+    {
+      "path": "scripts/train_motion_autoencoder.py",
+      "bytes": 9103,
+      "sha256": "4a5158ac8820c0c2f85ff902a45b4d859711534d52122600e06687cda21e644d"
+    },
+    {
+      "path": "scripts/train_recognition.py",
+      "bytes": 10421,
+      "sha256": "b940825222a1ac610ba4eff98bd9d0addecba3cac20c545e42c64abaae5fe19c"
+    },
+    {
+      "path": "scripts/validate_avatar_gloss_map.py",
+      "bytes": 1030,
+      "sha256": "2355fb29122c184763f790e716ed02e2ba86d5146abccaf8ba14ab0e827b80e4"
+    },
+    {
+      "path": "scripts/validate_cslrt_landmarks.py",
+      "bytes": 2793,
+      "sha256": "ec6ee03d7825e09995ea05335680bdaf42b9ab1abfc152e13c653eddb7a46031"
+    },
+    {
+      "path": "scripts/validate_msasl_landmarks.py",
+      "bytes": 2638,
+      "sha256": "603e760d62e4e0c59df3da8c24fb9f119e41826ba8880cb21ee179b32fcda5e1"
+    },
+    {
+      "path": "scripts/validate_pairs.py",
+      "bytes": 4017,
+      "sha256": "fcc765bdf4e1eb1e8bd2c888fa5b712c434973dc74ff803c20a29e791b725949"
+    },
+    {
+      "path": "scripts/verify_video_to_avatar_demo.py",
+      "bytes": 4473,
+      "sha256": "ac70cc0a2d11376d371ab7d06d069376409960f07bb823f269af0795cc349b05"
+    },
+    {
+      "path": "src/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/api/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/api/server.py",
+      "bytes": 24680,
+      "sha256": "87dabf9d027da1fc7e8c4fa119b443fd56dea0b6b3462f6510689558c439c1ae"
+    },
+    {
+      "path": "src/generation/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/generation/animate.py",
+      "bytes": 7014,
+      "sha256": "d8ea9186b101e38174df9f1291e0de91e06d1c9f70d156af23231659ff5b61e7"
+    },
+    {
+      "path": "src/generation/avatar.py",
+      "bytes": 1392,
+      "sha256": "449d45048074e45198ebca91aa130a5c4d56e8ccfd8f44e0eaef17cab2356bb9"
+    },
+    {
+      "path": "src/generation/fingerspell.py",
+      "bytes": 5918,
+      "sha256": "95a4f82a00a997cb87c6c46d6c97c9af12dc6f4b0230496c2f581664c40ab874"
+    },
+    {
+      "path": "src/generation/fix_hand_attachment.py",
+      "bytes": 4974,
+      "sha256": "09b233254496f6652f95653a00f34d3a48dcbbac497cafa07b20f5ac3f1be6d3"
+    },
+    {
+      "path": "src/generation/motion_autoencoder.py",
+      "bytes": 2229,
+      "sha256": "ef7d41e8af7d3055b94a4b6db3f4bb29066f2b9baf2fa5e9f0e647d7c4f69134"
+    },
+    {
+      "path": "src/generation/validate_landmark_projection.py",
+      "bytes": 5818,
+      "sha256": "8a56925a9001b61782ced68549b23667be9364254b4b8b12b315608d7a7dc189"
+    },
+    {
+      "path": "src/generation/validate_landmark_projection_all.py",
+      "bytes": 8680,
+      "sha256": "dcff5dce02e4b826d5a76e9cc514ce6b73f78943a26eec53e425bad95d5b999c"
+    },
+    {
+      "path": "src/recognition/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/recognition/dataset.py",
+      "bytes": 23005,
+      "sha256": "9d7bb8759b3ecce97cdc95dadb18d6f27d22401d971146edefa24be4612678c0"
+    },
+    {
+      "path": "src/recognition/model.py",
+      "bytes": 3613,
+      "sha256": "3688a3814e2b5d57510bf1e973171d1c4d12cfaebd3381c85e7ed9e5cd530e6f"
+    },
+    {
+      "path": "src/recognition/preprocess.py",
+      "bytes": 7835,
+      "sha256": "1994a368e53081072383c5e77ba2eecdbfe86b94c174efda177370bed207fd1e"
+    },
+    {
+      "path": "src/translation/__init__.py",
+      "bytes": 527,
+      "sha256": "4228b5605bae1654bf11499036c2782ae69446167fce5031ad96f9d83d90337c"
+    },
+    {
+      "path": "src/translation/translator.py",
+      "bytes": 12192,
+      "sha256": "203dbe9c7f6e3c5afbf01dede55229a9fd0b1ba702cdc3cdd3818be3d538c8ba"
+    },
+    {
+      "path": "src/utils/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/utils/feature_extractor.py",
+      "bytes": 9768,
+      "sha256": "8d476fd7aaeb80f77d37fc236d0c6f3ab68b90e81793dd580227883bb6969552"
+    },
+    {
+      "path": "src/utils/isl_augmentation.py",
+      "bytes": 3520,
+      "sha256": "b3db4e1698e93668815edfa557645eaca8bd34c9100cd9bd9d058a1125fb0a85"
+    },
+    {
+      "path": "src/utils/mediapipe_demo.py",
+      "bytes": 3325,
+      "sha256": "1dcf2a7b15bd380d6f8c82ad1ebc438410ed5430b6967e98860a357fad49d53c"
+    },
+    {
+      "path": "src/utils/metrics.py",
+      "bytes": 582,
+      "sha256": "8c909bd86fe0b160d0397d98bc046c4c05a97ed4f21ed864514a97e469029092"
+    },
+    {
+      "path": "src/utils/video.py",
+      "bytes": 235,
+      "sha256": "ec54b333196d21fd63989c4a6b0699f033b1491650d550e9732b0f414a7da9be"
+    },
+    {
+      "path": "src/web/app.js",
+      "bytes": 12983,
+      "sha256": "e1bc579ecbdce1ffb00a06f92bb7fbc6358b9a2c84ad0455f94fd6d4f430f972"
+    },
+    {
+      "path": "src/web/index.html",
+      "bytes": 4803,
+      "sha256": "4a6fdabe3d6fd8fa23a3401ae67818d1ac9934fec5dea882123d2e9209cef2d3"
+    },
+    {
+      "path": "src/web/styles.css",
+      "bytes": 5665,
+      "sha256": "5a5f7d5096788198ba0b08c3530e8e62ee67e61adea556f929f3b6bf42d098e9"
+    },
+    {
+      "path": "tests/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/test_api_contract.py",
+      "bytes": 4204,
+      "sha256": "e50bb0774a1669daf2da3c8ea04082190796dfcd1f228b20078343ef701ab91c"
+    },
+    {
+      "path": "tests/test_cslrt_splits.py",
+      "bytes": 3193,
+      "sha256": "3dc57795a99da9dc0944d23cfd1cc46e4519843637dcf73d8b62b1a20d7bce46"
+    },
+    {
+      "path": "tests/test_fingerspell.py",
+      "bytes": 1365,
+      "sha256": "67fc9226d8bfaf5b4258142cf5eb79cc7ef89860806024205a094c89114f1bfb"
+    },
+    {
+      "path": "tests/test_isign_group_splits.py",
+      "bytes": 403,
+      "sha256": "03fa87d7000f0d56279a597309c8df436e13565c752f7df4d5468ef1c8ae4feb"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "bytes": 1396,
+      "sha256": "a7d9445956763dca18885c4f20bee9749a103876e078a7b0b8c29a1b6e304fe5"
+    },
+    {
+      "path": "tests/test_motion_autoencoder.py",
+      "bytes": 389,
+      "sha256": "6c4f2779fbdff0f790762eac6a9dc8eafc52413e57a7097785d9af4b07df9863"
+    },
+    {
+      "path": "tests/test_msasl_extraction.py",
+      "bytes": 1603,
+      "sha256": "99bc1339b27a7232f933ddb9bce01fade92737aa94a551a6c9f421df7c46f749"
+    },
+    {
+      "path": "tests/test_preprocess.py",
+      "bytes": 1016,
+      "sha256": "12ab5cf4f3121d23e7eaa5ead83602acec75cba5b99c50df71de067c6d685589"
+    },
+    {
+      "path": "tests/test_recognition_calibration.py",
+      "bytes": 902,
+      "sha256": "4c277e4944f4f1a8d950576c48b97fae09f168ec9d1f8316b2d2a91a8557836d"
+    },
+    {
+      "path": "tests/test_recognition_model.py",
+      "bytes": 851,
+      "sha256": "2108a30ca3990eb6efec84b05534b9f48f6b81024668783d901cbc9a59599009"
+    },
+    {
+      "path": "tests/test_translation.py",
+      "bytes": 1765,
+      "sha256": "f96b7f85e92c23acc5231f08501738a9163022d8802ea7005aeb876b25b7abcc"
+    }
+  ]
+}

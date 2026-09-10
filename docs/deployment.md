@@ -1,5 +1,9 @@
 # Deployment and defense handoff
 
+See [the current paper handoff](IEEE_PAPER_HANDOFF.md) for known runtime blockers.
+Commands are reproduction instructions, not proof of live acceptance. Prefer
+binding to `127.0.0.1` for a local-only demo.
+
 ## Local run
 
 ```bash
@@ -10,14 +14,22 @@ Open `http://localhost:8000`. The service uses deterministic local translation
 rules by default; set `AITE_ENABLE_LLM=true` only when an approved model is
 available and its output has been evaluated.
 
+Gemini refinement is opt-in. Store `GEMINI_API_KEY` outside the repository,
+load it in the terminal that launches the service, and set
+`AITE_ENABLE_GEMINI=true`. Gemini produces a vocabulary-checked draft, without
+semantic/completeness guarantees. Errors normally fall back, potentially through
+Llama when also enabled. See [TRANSLATION.md](TRANSLATION.md). This integration
+sends text, not the uploaded video, to Gemini.
+
 The demo defaults to `AITE_ENABLE_RECOGNITION=false`. The selected isolated-sign
 checkpoint is `models/msasl100_pose_balanced_large_recognition/best_model.pt`;
 it passed the predeclared validation and held-out selective-accuracy gate. Upload
-extraction runs in the compatible `.venv-cslrt`
-subprocess, while PyTorch inference stays in the API environment. This avoids the
-native MediaPipe crash previously seen when both runtimes shared one process.
+extraction currently uses the API Python executable in a subprocess. The older
+verification helper uses `.venv-cslrt`, but the upload handler does not; the
+MediaPipe compatibility workaround must be reconciled and tested before
+claiming the current HTTP upload path works.
 
-To enable the validated isolated-sign file-upload and webcam path explicitly, run:
+To enable the isolated-sign file-upload and webcam path for acceptance testing, run:
 
 ```bash
 AITE_ENABLE_RECOGNITION=true MPLCONFIGDIR=/tmp/aite-mpl \
@@ -27,6 +39,10 @@ AITE_ENABLE_RECOGNITION=true MPLCONFIGDIR=/tmp/aite-mpl \
 The supported scope is one MSASL-100 isolated sign per clip, not continuous ASL
 sentences. The API applies a 50 MB upload limit, landmark coverage checks, and a
 validation-selected confidence threshold. Low-confidence clips return `UNKNOWN`.
+Generated avatar videos are stored in `/tmp/aite-generated` and expired files
+are removed whenever a new avatar is generated. The default retention period is
+one hour; set `AITE_GENERATED_VIDEO_TTL_SECONDS` to change it, or to a negative
+value only when an external cleanup policy is in place.
 
 ## Docker
 
@@ -62,7 +78,8 @@ AITE_ENABLE_RECOGNITION=true MPLCONFIGDIR=/tmp/aite-mpl \
 
 `/generate-avatar` returns a relative `video_url` under `/generated/`; the browser
 UI consumes that URL directly. It retrieves recorded landmark motion where a
-safe match exists and otherwise renders an illustrative 2D MP4. Neither mode is
+lookup match exists and otherwise renders an illustrative 2D MP4. Lookup is not
+linguistic approval; multiword output may contain only one sign. Neither mode is
 a trained or linguistically validated ISL generator.
 
 For an exact match to one of the 97 extracted CSLRT English sentence labels,
@@ -84,6 +101,46 @@ official signer-independent splits, quality filtering, validation-only rejection
 calibration, and held-out Top-1/Top-5/macro-F1/ECE reporting. Keep recognition
 disabled until those new result files exist and meet the declared target.
 
+## Reproduce the experimental 126-class expansion
+
+This experiment is retained for research and mapping triage only. It is not the
+API checkpoint and must not be enabled for avatar playback without individual
+ISL linguistic review. It combines the validated 100-class MSASL data with
+26 exact-English-label INCLUDE-50 candidates; `break` and `elephant` were
+excluded because quality filtering left them absent from a held-out split.
+
+```bash
+# Train in safe CPU-sized chunks. Repeat the second command until it reports
+# completion; every chunk restores model, optimizer, scheduler, and RNG state.
+MPLCONFIGDIR=/tmp/aite-mpl .venv/bin/python scripts/train_cslrt_recognition.py \
+  --config configs/msasl126_include50_candidate_recognition.yaml \
+  --max-epochs-per-run 3
+
+MPLCONFIGDIR=/tmp/aite-mpl .venv/bin/python scripts/train_cslrt_recognition.py \
+  --config configs/msasl126_include50_candidate_recognition.yaml \
+  --max-epochs-per-run 3 --resume
+
+MPLCONFIGDIR=/tmp/aite-mpl .venv/bin/python scripts/evaluate_cslrt_recognition.py \
+  --checkpoint models/msasl126_include50_candidate_recognition/best_model.pt \
+  --keypoints-dir data/asl/msasl100_keypoints --splits-dir data/asl/msasl126_splits \
+  --split val --output models/msasl126_include50_candidate_recognition/val_results.json
+
+.venv/bin/python scripts/calibrate_msasl_recognition.py \
+  --validation-results models/msasl126_include50_candidate_recognition/val_results.json \
+  --output models/msasl126_include50_candidate_recognition/calibration.json
+
+MPLCONFIGDIR=/tmp/aite-mpl .venv/bin/python scripts/evaluate_cslrt_recognition.py \
+  --checkpoint models/msasl126_include50_candidate_recognition/best_model.pt \
+  --keypoints-dir data/asl/msasl100_keypoints --splits-dir data/asl/msasl126_splits \
+  --split test --calibration models/msasl126_include50_candidate_recognition/calibration.json \
+  --output models/msasl126_include50_candidate_recognition/test_results.json
+
+.venv/bin/python scripts/report_candidate_class_metrics.py \
+  --results models/msasl126_include50_candidate_recognition/test_results.json \
+  --candidates configs/msasl_include50_candidate_glosses.json \
+  --output docs/msasl126_candidate_class_metrics.json
+```
+
 ## Next generation milestone: pose-generation training
 
 The next planned major phase is a pose-generation model trained on normalized
@@ -95,6 +152,25 @@ MPLCONFIGDIR=/tmp/aite-mpl .venv/bin/python scripts/extract_isl_landmarks.py \
   --input-dir data/isl/include-50 \
   --output-dir data/isl/keypoints
 ```
+
+### Completed prerequisite: motion reconstruction baseline
+
+The repository now includes an evaluated temporal motion autoencoder. It learns
+to reconstruct observed CSLRT pose sequences and is deliberately **not** a
+text-conditioned generator or an avatar model. Run it in CPU-safe chunks:
+
+```bash
+MPLCONFIGDIR=/tmp/aite-mpl .venv/bin/python scripts/train_motion_autoencoder.py \
+  --config configs/isl_motion_autoencoder.yaml --max-epochs-per-run 10
+
+MPLCONFIGDIR=/tmp/aite-mpl .venv/bin/python scripts/train_motion_autoencoder.py \
+  --config configs/isl_motion_autoencoder.yaml --max-epochs-per-run 10 --resume
+```
+
+The completed baseline used signer 1--5 for training, signer 6 for validation,
+and signer 7 only for final testing. Its held-out reconstruction MAE was 0.4034;
+this generalization gap is evidence that more diverse, reviewed ISL data and
+text/gloss supervision are needed before attempting conditional generation.
 
 ### ISL-CSLRT sentence corpus
 

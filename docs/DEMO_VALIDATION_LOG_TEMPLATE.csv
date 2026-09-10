@@ -1,0 +1,9 @@
+test_id,test_date,feature,input,expected_result,observed_result,translation_mode,avatar_mode,pass_fail,evidence_path,notes
+T01,,multiword_completeness,HELLO WATER,Both meanings represented with accurate provenance,,,,,,
+T02,,recorded_playback,THANK_YOU,Inspect actual recording separately from linguistic approval,,,,,,
+T03,,webcam_recognition,one_supported_isolated_sign,Prediction or explicit low-confidence rejection,,,,,,
+T04,,unknown_name_fallback,NANDITA,Unsupported output labelled without claiming spelling,,,,,,
+T05,,fingerspelling_after_assets,NANDITA,All seven letters in order with intelligible transitions,,,,,,
+T06,,sentence_negation,exact sentence and negated variant,No silent different-meaning retrieval,,,,,,
+T07,,provider_failure,HELLO,Actual fallback mode reported without losing source meaning,,,,,,
+T08,,webcam_stop_clear,record then stop or clear,Camera tracks released and UI state consistent,,,,,,

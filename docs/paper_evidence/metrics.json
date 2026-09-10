@@ -1,0 +1,197 @@
+{
+  "msasl100_pose_balanced_large_recognition": {
+    "val_results.json": {
+      "dataset_type": "msasl_npz",
+      "split": "val",
+      "samples": 643,
+      "classes_in_checkpoint": 100,
+      "classes_present_in_test": 100,
+      "top1_accuracy": 0.49300155520995337,
+      "top5_accuracy": 0.7558320373250389,
+      "macro_precision": 0.47611488073330177,
+      "macro_recall": 0.4858722666222666,
+      "macro_f1": 0.4533508079221298,
+      "balanced_accuracy": 0.4858722666222666,
+      "calibration": {
+        "expected_calibration_error": 0.045762933767509305,
+        "negative_log_likelihood": 2.116023422685266
+      },
+      "selective_evaluation": null,
+      "feature_coverage": {
+        "mean_pose_coverage": 0.9966951788491446,
+        "mean_hand_coverage": 0.83325233281493
+      }
+    },
+    "test_results.json": {
+      "dataset_type": "msasl_npz",
+      "split": "test",
+      "samples": 521,
+      "classes_in_checkpoint": 100,
+      "classes_present_in_test": 100,
+      "top1_accuracy": 0.47024952015355087,
+      "top5_accuracy": 0.7677543186180422,
+      "macro_precision": 0.47507571814150756,
+      "macro_recall": 0.4847074738986504,
+      "macro_f1": 0.44613100696733754,
+      "balanced_accuracy": 0.4847074738986504,
+      "calibration": {
+        "expected_calibration_error": 0.09803169290758598,
+        "negative_log_likelihood": 2.2096717340551475
+      },
+      "selective_evaluation": {
+        "threshold": 0.5903989672660828,
+        "accepted": 197,
+        "rejected": 324,
+        "coverage": 0.3781190019193858,
+        "selective_accuracy": 0.817258883248731
+      },
+      "feature_coverage": {
+        "mean_pose_coverage": 0.9998800383877159,
+        "mean_hand_coverage": 0.868102207293666
+      }
+    },
+    "calibration.json": {
+      "selection_split": "val",
+      "samples": 643,
+      "target_selective_accuracy": 0.8,
+      "minimum_coverage": 0.2,
+      "selected": {
+        "threshold": 0.5903989672660828,
+        "accepted": 211,
+        "coverage": 0.328149300155521,
+        "selective_accuracy": 0.8009478672985783
+      },
+      "target_met": true,
+      "validation_results": "models/msasl100_pose_balanced_large_recognition/val_results.json"
+    },
+    "runtime.json": {
+      "python": "3.14.7",
+      "pytorch": "2.13.0+cu130",
+      "device": "cpu",
+      "seed": 42,
+      "train_samples": 2747,
+      "validation_samples": 643,
+      "classes": 100,
+      "trainable_parameters": 741476
+    }
+  },
+  "msasl126_include50_candidate_recognition": {
+    "val_results.json": {
+      "dataset_type": "msasl_npz",
+      "split": "val",
+      "samples": 729,
+      "classes_in_checkpoint": 126,
+      "classes_present_in_test": 126,
+      "top1_accuracy": 0.4513031550068587,
+      "top5_accuracy": 0.7242798353909465,
+      "macro_precision": 0.4512410649315411,
+      "macro_recall": 0.4794484836151503,
+      "macro_f1": 0.42732169691442873,
+      "balanced_accuracy": 0.4794484836151503,
+      "calibration": {
+        "expected_calibration_error": 0.05262050483329795,
+        "negative_log_likelihood": 2.3141327040375064
+      },
+      "selective_evaluation": null,
+      "feature_coverage": {
+        "mean_pose_coverage": 0.9967421124828533,
+        "mean_hand_coverage": 0.8255315500685871
+      }
+    },
+    "test_results.json": {
+      "dataset_type": "msasl_npz",
+      "split": "test",
+      "samples": 593,
+      "classes_in_checkpoint": 126,
+      "classes_present_in_test": 126,
+      "top1_accuracy": 0.5042158516020236,
+      "top5_accuracy": 0.7639123102866779,
+      "macro_precision": 0.4999341464253745,
+      "macro_recall": 0.4907603950671177,
+      "macro_f1": 0.4599440677172562,
+      "balanced_accuracy": 0.4907603950671177,
+      "calibration": {
+        "expected_calibration_error": 0.05029593489775167,
+        "negative_log_likelihood": 2.2103238403071224
+      },
+      "selective_evaluation": {
+        "threshold": 0.6365509629249573,
+        "accepted": 168,
+        "rejected": 425,
+        "coverage": 0.28330522765598654,
+        "selective_accuracy": 0.8452380952380952
+      },
+      "feature_coverage": {
+        "mean_pose_coverage": 0.9997892074198989,
+        "mean_hand_coverage": 0.8697301854974705
+      }
+    },
+    "calibration.json": {
+      "selection_split": "val",
+      "samples": 729,
+      "target_selective_accuracy": 0.8,
+      "minimum_coverage": 0.2,
+      "selected": {
+        "threshold": 0.6365509629249573,
+        "accepted": 196,
+        "coverage": 0.26886145404663925,
+        "selective_accuracy": 0.8010204081632653
+      },
+      "target_met": true,
+      "validation_results": "models/msasl126_include50_candidate_recognition/val_results.json"
+    },
+    "runtime.json": {
+      "python": "3.14.7",
+      "pytorch": "2.13.0+cu130",
+      "device": "cpu",
+      "seed": 42,
+      "train_samples": 3062,
+      "validation_samples": 729,
+      "classes": 126,
+      "trainable_parameters": 744830
+    }
+  },
+  "cslrt_recognition_v3": {
+    "test_results.json": {
+      "split": "test",
+      "samples": 93,
+      "classes_in_checkpoint": 97,
+      "classes_present_in_test": 93,
+      "top1_accuracy": 0.053763440860215055,
+      "top5_accuracy": 0.17204301075268819
+    }
+  },
+  "cslrt_word_recognition": {
+    "test_results.json": {
+      "split": "test",
+      "samples": 169,
+      "classes_in_checkpoint": 114,
+      "classes_present_in_test": 114,
+      "top1_accuracy": 0.07692307692307693,
+      "top5_accuracy": 0.3136094674556213
+    }
+  },
+  "isl_motion_autoencoder": {
+    "evaluation.json": {
+      "purpose": "Signer-disjoint motion reconstruction baseline; not text-conditioned pose generation.",
+      "splits": {
+        "train": 474,
+        "validation": 96,
+        "test": 93
+      },
+      "best_validation": {
+        "loss": 0.1972385992606481,
+        "position_mse": 0.18639646470546722,
+        "velocity_mse": 0.05421066905061404,
+        "mae": 0.2556695782696759
+      },
+      "held_out_test": {
+        "loss": 0.44794919958678625,
+        "position_mse": 0.4219372294923311,
+        "velocity_mse": 0.13005986585411974,
+        "mae": 0.40341429740392276
+      },
+      "epochs_completed": 50
+    }
+  }
+}

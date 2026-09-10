@@ -1,22 +1,29 @@
 # AITE Project Status, Reproduction Guide, and Roadmap
 
+> Update, 11 September 2026: [IEEE_PAPER_HANDOFF.md](IEEE_PAPER_HANDOFF.md)
+> supersedes the historical capability statements below. Latest automated run:
+> 38 tests passed. Webcam/alphabet acceptance is pending. Code review found
+> extraction-runtime, multiword-playback and translation-validation gaps.
+> Earlier working-demo statements do not establish current full-API acceptance.
+> An offline motion autoencoder is implemented; conditional generation is not.
+
 **Project:** ASL–ISL Translation Engine (AITE)  
 **Status date:** 10 September 2026  
-**Document purpose:** Authoritative record of completed work, current capability,
+**Document purpose:** Historical record of completed work, earlier capability,
 reproducible project steps, measured results, limitations, and future work.
 
 ## 1. Executive status
 
-AITE currently provides a working local research/demo application with a tested
-FastAPI backend, browser interface, rule-based draft gloss conversion, extracted
-ISL pose data, and recorded 2D landmark playback. The preprocessing and playback
-pipelines work; the complete ASL-video → validated ISL translation → generative
-avatar product does not yet exist.
+AITE provides a working local research/demo application with a tested FastAPI
+backend, browser interface, isolated ASL-video recognition, rule-based draft gloss
+conversion, extracted ISL pose data, and recorded 2D landmark playback. The
+preprocessing and limited playback pipelines work; the complete ASL-video →
+reviewed ISL translation → generative-avatar product does not yet exist.
 
-The application must currently be demonstrated using manual text. Uploaded-video
-recognition is intentionally disabled because all trained recognition baselines
-have low held-out accuracy. The avatar retrieves recorded motion for supported
-words or sentences and otherwise shows a clearly labelled illustrative figure.
+The upload/webcam path is enabled only when the server starts with
+`AITE_ENABLE_RECOGNITION=true`, and is limited to one MSASL-style isolated ASL
+sign per clip. The avatar retrieves recorded motion for three verified
+ASL-to-ISL paths and otherwise shows a clearly labelled illustrative figure.
 No GAN or other pose-generation model has been trained yet.
 
 ## 2. Current capability matrix
@@ -24,7 +31,7 @@ No GAN or other pose-generation model has been trained yet.
 | Component | Current state | Evidence / result | Production-ready? |
 |---|---|---|---|
 | Local API and web UI | Working | `/health` returns `status: ok` | Demo only |
-| Automated tests | Working | 27 tests pass | Yes for covered behavior |
+| Automated tests | Working | 29 tests pass | Yes for covered behavior |
 | INCLUDE-50 landmark extraction | Complete | 61 extracted playback classes | Data requires expert review |
 | CSLRT sentence landmark extraction | Complete | 663 sequences, 18,863 frames | Valid schema-v2 features |
 | CSLRT word landmark extraction | Complete | 1,036 still images, 114 classes | Auxiliary data only |
@@ -32,10 +39,12 @@ No GAN or other pose-generation model has been trained yet.
 | Word pose playback | Working | 61 recorded word classes, 63 aliases | Retrieval, not generation |
 | Illustrative fallback | Working | Browser-playable H.264 MP4 | Not sign-language output |
 | ASL video recognition | Validated isolated-sign prototype | MSASL-100 test: 47.02% top-1, 76.78% top-5, 44.61% macro-F1; rejection test accuracy 81.73% | Yes, limited scope |
+| Expanded ASL recognition | Evaluated experimental candidate | 126 classes: test 50.42% top-1, 76.39% top-5, 45.99% macro-F1 | Not deployed; mappings need review |
 | CSLRT sentence classifier | Evaluated | 5.38% top-1, 17.20% top-5 | No |
 | CSLRT static-word classifier | Evaluated | 7.69% top-1, 31.36% top-5 | No |
 | Rule-based gloss conversion | Working as draft | Deterministic mapping/rules | Needs ISL expert validation |
 | Llama-2 translation | Disabled | `AITE_ENABLE_LLM=false` by default | No |
+| ISL motion autoencoder | Evaluated reconstruction baseline | Held-out signer MAE 0.4034; position MSE 0.4219 | No; not text-conditioned generation |
 | Pose-generation/GAN model | Not implemented/trained | Recorded playback is used instead | No |
 | Realistic 3D avatar | Not implemented | Current renderer is a 2D skeleton | No |
 
@@ -57,11 +66,12 @@ Recorded-motion lookup
 2D landmark renderer -> ffmpeg H.264 MP4 -> browser video player
 ```
 
-The planned uploaded-video path exists at the API level but is disabled:
+The optional uploaded-video path is enabled with an explicit server environment
+flag and is constrained to isolated signs:
 
 ```text
-Uploaded ASL video -> MediaPipe features -> recognition model
-                  X disabled because the checkpoint is not accurate enough
+Uploaded ASL video -> MediaPipe features -> calibrated MSASL-100 recognition
+                  -> accepted gloss or explicit low-confidence rejection
 ```
 
 CSLRT is an **ISL** corpus. Its classifiers and motion assets cannot be described
@@ -142,7 +152,31 @@ recognizer and reviewed cross-language translation supervision.
   selective accuracy at 37.81% test coverage, meeting the predeclared gate for
   one MSASL-100-style isolated ASL sign per clip.
 
-### 4.5 CSLRT sentence pipeline
+### 4.5 Experimental 126-class expansion (not deployed)
+
+- Added resumable training (`--resume` and `--max-epochs-per-run`) so CPU-only
+  experiments preserve the model, optimiser, scheduler, RNG state, and epoch log
+  after every chunk.
+- Added deterministic extraction/split support for a named candidate-gloss list
+  and filtered classes that were absent from a held-out split.
+- Extended the 100-class MSASL subset with 26 exact-English-label INCLUDE-50
+  candidates. Two requested labels (`break` and `elephant`) were excluded because
+  they did not survive quality filtering in every split.
+- The final data has 4,448 extracted sequences; the leakage-free split has 3,062
+  train, 729 validation, and 593 test sequences across 126 classes.
+- The 80-epoch, class-balanced Transformer selected epoch 69: validation Top-1
+  45.13%, Top-5 72.43%, macro-F1 42.73%; untouched test Top-1 50.42%, Top-5
+  76.39%, macro-F1 45.99%.
+- Validation calibration selected threshold 0.636551, yielding 80.10% selective
+  validation accuracy at 26.89% coverage; applied once to test, it yielded
+  84.52% selective accuracy at 28.33% coverage. The configuration, logs,
+  checkpoint, calibration, and test results are stored under
+  `models/msasl126_include50_candidate_recognition/`.
+- This model is not wired into the API. Exact English label overlap does **not**
+  establish an ASL-to-ISL equivalence; every new playback mapping requires ISL
+  linguistic/expert review and recorded ISL motion before deployment.
+
+### 4.6 CSLRT sentence pipeline
 
 - Extracted 663 signer/sentence sequences from 97 available sentence directories.
 - Processed 18,863 frames with 99.97% pose coverage and 70.22% hand coverage.
@@ -156,7 +190,25 @@ recognizer and reviewed cross-language translation supervision.
   and confusion summaries.
 - Trained the corrected v3 baseline and evaluated it only on held-out signer 7.
 
-### 4.6 CSLRT isolated-word pipeline
+### 4.7 ISL motion autoencoder reconstruction baseline
+
+- Added a 75-keypoint temporal GRU autoencoder and a reproducible training
+  script with fixed 48-frame resampling, position and velocity reconstruction
+  losses, gradient clipping, per-epoch checkpoints, and safe resume support.
+- Used the pre-existing signer-disjoint CSLRT split: 474 training sequences
+  (signers 1--5), 96 validation sequences (signer 6), and 93 test sequences
+  (signer 7). The test signer is evaluated only after validation checkpoint
+  selection.
+- After 50 CPU epochs, the selected checkpoint achieved validation MAE 0.2557
+  and held-out signer MAE 0.4034 (position MSE 0.4219, velocity MSE 0.1301).
+  The generalization gap means this is a feasibility/reconstruction baseline,
+  not usable motion synthesis.
+- The checkpoint, full epoch history, and held-out metrics are saved in
+  `models/isl_motion_autoencoder/`. The model is intentionally not connected
+  to the avatar API because it has no text/gloss conditioning and has not been
+  evaluated for ISL intelligibility.
+
+### 4.8 CSLRT isolated-word pipeline
 
 - Confirmed that the word portion contains still images, not temporal video clips.
 - Added `scripts/extract_cslrt_word_landmarks.py` with schema-v2 normalization.
@@ -171,7 +223,7 @@ recognizer and reviewed cross-language translation supervision.
 - Added class-balanced sampling and trained/evaluated a small static-word model.
 - Generalized the CSLRT evaluator so static samples do not require signer fields.
 
-### 4.7 Avatar/playback pipeline
+### 4.9 Avatar/playback pipeline
 
 - Added `configs/avatar_gloss_map.json` with 63 aliases covering 61 extracted
   INCLUDE-50 classes; its status remains `draft_pending_isl_expert_review`.
@@ -184,7 +236,7 @@ recognizer and reviewed cross-language translation supervision.
 - Kept response metadata (`mode`, source sentence/gloss, signer, and match score)
   so retrieved motion cannot be mistaken for generated motion.
 
-### 4.8 Translation safeguards
+### 4.10 Translation safeguards
 
 - Made Llama loading opt-in with `AITE_ENABLE_LLM=true`; it is off by default.
 - Preserved deterministic rule-based operation when model weights are unavailable.
@@ -194,7 +246,7 @@ recognizer and reviewed cross-language translation supervision.
 - Made translation evaluation require a real reviewed test set instead of inventing
   fallback references.
 
-### 4.9 Verification and documentation
+### 4.11 Verification and documentation
 
 - Added API contract, data split, metrics, translation, and preprocessing tests.
 - Added recognition and translation evaluators, latency checks, QA scripts, dataset

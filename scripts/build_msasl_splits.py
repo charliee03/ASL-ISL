@@ -53,12 +53,28 @@ def main() -> None:
     parser.add_argument("--output-dir", default="data/asl/msasl100_splits")
     parser.add_argument("--min-pose-coverage", type=float, default=0.80)
     parser.add_argument("--min-hand-coverage", type=float, default=0.10)
+    parser.add_argument("--drop-classes-missing-from-splits", action="store_true")
     args = parser.parse_args()
     keypoints_dir, output_dir = Path(args.keypoints_dir), Path(args.output_dir)
     metadata = json.loads((keypoints_dir / "metadata.json").read_text(encoding="utf-8"))
     splits, vocabulary, rejected = build_splits(
         metadata, args.min_pose_coverage, args.min_hand_coverage
     )
+    dropped_classes = []
+    if args.drop_classes_missing_from_splits:
+        represented = [set(int(row["class_id"]) for row in rows) for rows in splits.values()]
+        eligible = set.intersection(*represented)
+        dropped_classes = [vocabulary[index] for index in range(len(vocabulary)) if index not in eligible]
+        remap = {old: new for new, old in enumerate(sorted(eligible))}
+        vocabulary = [vocabulary[old] for old in sorted(eligible)]
+        for split, rows in splits.items():
+            filtered = []
+            for row in rows:
+                if int(row["class_id"]) in remap:
+                    row = dict(row)
+                    row["class_id"] = remap[int(row["class_id"])]
+                    filtered.append(row)
+            splits[split] = filtered
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "vocabulary.json").write_text(json.dumps(vocabulary, indent=2), encoding="utf-8")
     summary = {
@@ -68,6 +84,7 @@ def main() -> None:
             "min_hand_coverage": args.min_hand_coverage,
         },
         "classes": len(vocabulary),
+        "dropped_classes_missing_from_splits": dropped_classes,
         "rejected": dict(rejected),
         "splits": {},
     }

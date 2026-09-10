@@ -9,6 +9,7 @@ Run it with the Python 3.12 ``.venv-cslrt`` environment.
 
 import argparse
 import json
+import re
 import sys
 from multiprocessing import get_context
 from pathlib import Path
@@ -184,8 +185,12 @@ def main() -> None:
     parser.add_argument("--annotation-file", default="Dataset/MS-ASL/MSASL_unified.json")
     parser.add_argument("--output-dir", default="data/asl/msasl100_keypoints")
     parser.add_argument("--num-classes", type=int, default=100)
+    parser.add_argument("--glosses-file", help="JSON list of MSASL glosses to extract instead of label IDs")
+    parser.add_argument("--base-vocabulary", help="Existing vocabulary JSON used to assign appended contiguous class IDs")
+    parser.add_argument("--append-metadata", action="store_true", help="Merge new records into existing metadata.json")
     parser.add_argument("--num-frames", type=int, default=32)
     parser.add_argument("--workers", type=int, default=1, help="Parallel MediaPipe workers")
+    parser.add_argument("--start-index", type=int, default=0, help="Zero-based offset after deterministic selection")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--pose-model", default="models/mediapipe/pose_landmarker_full.task")
@@ -202,13 +207,45 @@ def main() -> None:
         raise SystemExit("MediaPipe pose/hand task model is missing")
 
     annotations = json.loads(annotation_path.read_text(encoding="utf-8"))
-    selected = [
-        row for row in annotations
-        if int(row["label"]) < args.num_classes and (data_root / row["video"]).is_file()
-    ]
+    if args.glosses_file:
+        requested = json.loads(Path(args.glosses_file).read_text(encoding="utf-8"))
+        if not isinstance(requested, list) or not all(isinstance(item, str) for item in requested):
+            raise SystemExit("--glosses-file must contain a JSON list of gloss strings")
+        normalise = lambda value: " ".join(re.sub(r"[^a-z0-9]+", " ", value.lower()).split())
+        requested_by_normalised = {normalise(gloss): gloss for gloss in requested}
+        if len(requested_by_normalised) != len(requested):
+            raise SystemExit("--glosses-file contains duplicate normalised glosses")
+        base_vocabulary = []
+        if args.base_vocabulary:
+            base_vocabulary = json.loads(Path(args.base_vocabulary).read_text(encoding="utf-8"))
+            if not isinstance(base_vocabulary, list) or not all(isinstance(item, str) for item in base_vocabulary):
+                raise SystemExit("--base-vocabulary must contain a JSON list of gloss strings")
+        class_ids = {normalise(gloss): index for index, gloss in enumerate(base_vocabulary)}
+        for gloss in requested:
+            class_ids.setdefault(normalise(gloss), len(class_ids))
+        selected, found_glosses = [], set()
+        for row in annotations:
+            key = normalise(str(row["gloss"]))
+            if key in requested_by_normalised and (data_root / row["video"]).is_file():
+                remapped = dict(row)
+                remapped["label"] = class_ids[key]
+                selected.append(remapped)
+                found_glosses.add(key)
+        missing = sorted(set(requested_by_normalised) - found_glosses)
+        if missing:
+            print(f"Warning: no local videos found for requested glosses: {', '.join(missing)}")
+    else:
+        selected = [
+            row for row in annotations
+            if int(row["label"]) < args.num_classes and (data_root / row["video"]).is_file()
+        ]
     selected.sort(key=lambda row: (row["split"], int(row["label"]), row["video"]))
+    if args.start_index < 0:
+        raise SystemExit("--start-index must be non-negative")
     if args.limit is not None:
-        selected = selected[:args.limit]
+        selected = selected[args.start_index:args.start_index + args.limit]
+    elif args.start_index:
+        selected = selected[args.start_index:]
     if not selected:
         raise SystemExit("No matching local MSASL videos were found")
     if args.workers < 1:
@@ -245,18 +282,28 @@ def main() -> None:
                     failures.append(failure)
                 print(message, flush=True)
 
+    previous_samples, previous_failures = [], []
+    metadata_path = output_dir / "metadata.json"
+    if args.append_metadata and metadata_path.is_file():
+        previous = json.loads(metadata_path.read_text(encoding="utf-8"))
+        previous_samples = list(previous.get("samples", []))
+        previous_failures = list(previous.get("failures", []))
+    merged_samples = {row["id"]: row for row in previous_samples}
+    merged_samples.update({row["id"]: row for row in manifest})
+    merged_failures = {row["id"]: row for row in previous_failures}
+    merged_failures.update({row["id"]: row for row in failures})
     metadata = {
         "schema_version": "1.0",
         "feature_schema_version": "2.0",
-        "dataset": f"MSASL-{args.num_classes}",
+        "dataset": f"MSASL-{len({row['class_id'] for row in merged_samples.values()})}",
         "feature_layout": {"pose": 33, "left_hand": 21, "right_hand": 21, "coordinates": 3},
         "normalization": "shoulder_midpoint_and_width",
         "num_frames": args.num_frames,
-        "samples": manifest,
-        "failures": failures,
+        "samples": sorted(merged_samples.values(), key=lambda row: (row["split"], row["class_id"], row["id"])),
+        "failures": sorted(merged_failures.values(), key=lambda row: row["id"]),
     }
-    (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-    print(f"Wrote {len(manifest)} samples to {output_dir}; skipped {len(failures)} failures")
+    metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    print(f"Wrote {len(manifest)} extracted/reused samples; metadata now has {len(merged_samples)} samples and {len(merged_failures)} failures")
 
 
 if __name__ == "__main__":

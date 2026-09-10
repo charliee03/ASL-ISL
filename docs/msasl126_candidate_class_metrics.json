@@ -1,0 +1,254 @@
+{
+  "purpose": "Recognition evidence for candidate selection; not ASL-to-ISL linguistic validation.",
+  "source_results": "models/msasl126_include50_candidate_recognition/test_results.json",
+  "split": "test",
+  "classes_in_checkpoint": 126,
+  "candidate_count_requested": 28,
+  "candidate_count_evaluated": 26,
+  "candidates": [
+    {
+      "english_label": "bear",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "f1": 0.8
+    },
+    {
+      "english_label": "break",
+      "recognition_status": "not_in_all_quality-filtered_splits",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval"
+    },
+    {
+      "english_label": "busy",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 6,
+      "precision": 0.4,
+      "recall": 0.6666666666666666,
+      "f1": 0.5
+    },
+    {
+      "english_label": "carrot",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "english_label": "close",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 1,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "english_label": "cook",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 3,
+      "precision": 0.42857142857142855,
+      "recall": 1.0,
+      "f1": 0.6
+    },
+    {
+      "english_label": "cry",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 4,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666
+    },
+    {
+      "english_label": "deer",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "english_label": "elephant",
+      "recognition_status": "not_in_all_quality-filtered_splits",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval"
+    },
+    {
+      "english_label": "exam",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 4,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666
+    },
+    {
+      "english_label": "giraffe",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "english_label": "give",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 4,
+      "precision": 0.6666666666666666,
+      "recall": 0.5,
+      "f1": 0.5714285714285715
+    },
+    {
+      "english_label": "good morning",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 1,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "english_label": "jump",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 3,
+      "precision": 0.25,
+      "recall": 0.3333333333333333,
+      "f1": 0.28571428571428575
+    },
+    {
+      "english_label": "key",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.4,
+      "recall": 1.0,
+      "f1": 0.5714285714285715
+    },
+    {
+      "english_label": "knife",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 3,
+      "precision": 0.5,
+      "recall": 0.3333333333333333,
+      "f1": 0.4
+    },
+    {
+      "english_label": "lion",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "english_label": "maybe",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "english_label": "monkey",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 3,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "english_label": "onion",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 4,
+      "precision": 0.5,
+      "recall": 0.25,
+      "f1": 0.3333333333333333
+    },
+    {
+      "english_label": "still",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.3333333333333333,
+      "recall": 0.5,
+      "f1": 0.4
+    },
+    {
+      "english_label": "tea",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "english_label": "tiger",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 3,
+      "precision": 0.375,
+      "recall": 1.0,
+      "f1": 0.5454545454545454
+    },
+    {
+      "english_label": "turtle",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 2,
+      "precision": 0.3333333333333333,
+      "recall": 0.5,
+      "f1": 0.4
+    },
+    {
+      "english_label": "umbrella",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 3,
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "f1": 0.5
+    },
+    {
+      "english_label": "uncle",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 3,
+      "precision": 0.6666666666666666,
+      "recall": 0.6666666666666666,
+      "f1": 0.6666666666666666
+    },
+    {
+      "english_label": "wife",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 1,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5
+    },
+    {
+      "english_label": "wrong",
+      "recognition_status": "evaluated",
+      "playback_status": "blocked_pending_ISL_linguistic_review_and_recorded_motion_approval",
+      "support": 6,
+      "precision": 0.8333333333333334,
+      "recall": 0.8333333333333334,
+      "f1": 0.8333333333333334
+    }
+  ]
+}

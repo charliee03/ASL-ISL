@@ -38,6 +38,7 @@ Thumbs.db
 
 # Logs
 *.log
+*.stderr
 
 # Node
 node_modules/

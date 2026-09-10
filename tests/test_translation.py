@@ -1,3 +1,6 @@
+import json
+from types import SimpleNamespace
+
 from src.translation.translator import ASLtoISLTranslator
 
 
@@ -27,3 +30,27 @@ def test_batch_translation_preserves_batch_boundaries():
     translator = make_translator()
 
     assert translator.translate_batch([["HELLO"], ["GOODBYE"]]) == [["NAMASKAR"], ["ALVIDA"]]
+
+
+def test_gemini_refinement_accepts_only_a_permutation_of_rule_glosses():
+    translator = make_translator()
+
+    class FakeModels:
+        @staticmethod
+        def generate_content(**_kwargs):
+            return SimpleNamespace(text=json.dumps({"isl_glosses": ["PANI", "NAMASKAR"]}))
+
+    translator.gemini_client = SimpleNamespace(models=FakeModels())
+    assert translator.translate_gloss_string("HELLO WATER") == "PANI NAMASKAR"
+
+
+def test_gemini_refinement_rejects_invented_glosses():
+    translator = make_translator()
+
+    class FakeModels:
+        @staticmethod
+        def generate_content(**_kwargs):
+            return SimpleNamespace(text=json.dumps({"isl_glosses": ["NAMASKAR", "INVENTED"]}))
+
+    translator.gemini_client = SimpleNamespace(models=FakeModels())
+    assert translator.translate_gloss_string("HELLO WATER") == "NAMASKAR PANI"

@@ -38,6 +38,7 @@ WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 GENERATED_DIR = Path(os.getenv("AITE_GENERATED_DIR", "/tmp/aite-generated"))
 LANDMARK_DIR = PROJECT_DIR / "data" / "isl" / "keypoints"
 CSLRT_LANDMARK_DIR = PROJECT_DIR / "data" / "isl" / "cslrt_keypoints"
+GENERATED_VIDEO_TTL_SECONDS = int(os.getenv("AITE_GENERATED_VIDEO_TTL_SECONDS", "3600"))
 GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
 if WEB_DIR.exists():
@@ -172,6 +173,29 @@ def _load_avatar_aliases() -> dict[str, str]:
 AVATAR_ALIASES = _load_avatar_aliases()
 
 
+def _cleanup_generated_videos(now: float | None = None) -> int:
+    """Remove only this service's expired generated avatar files.
+
+    Keeping generated media in a temporary directory prevents repeated demo use
+    from silently filling the host disk. File names are UUID based, so these
+    narrow patterns cannot target arbitrary user files in the directory.
+    """
+    if GENERATED_VIDEO_TTL_SECONDS < 0:
+        return 0
+    cutoff = (time.time() if now is None else now) - GENERATED_VIDEO_TTL_SECONDS
+    removed = 0
+    for pattern in ("avatar-*.mp4", ".avatar-*.raw.mp4"):
+        for path in GENERATED_DIR.glob(pattern):
+            try:
+                if path.is_file() and path.stat().st_mtime < cutoff:
+                    path.unlink()
+                    removed += 1
+            except OSError:
+                # A concurrent request or OS cleanup may have removed a file.
+                continue
+    return removed
+
+
 translator = None
 
 try:
@@ -179,6 +203,7 @@ try:
         grammar_rules_path=str(PROJECT_DIR / "configs" / "grammar_rules.json"),
         config_path=str(PROJECT_DIR / "configs" / "translation.yaml"),
         enable_llm=os.getenv("AITE_ENABLE_LLM", "false").lower() == "true",
+        enable_gemini=os.getenv("AITE_ENABLE_GEMINI", "false").lower() == "true",
     )
 except Exception as error:
     # Translation remains available as a clearly reported API error rather than
@@ -270,13 +295,13 @@ async def translate_text(body: dict):
             {"error": "Translation rules are unavailable; enter ISL gloss manually."},
             status_code=503,
         )
-    isl_gloss = translator.translate_gloss_string(asl_gloss)
+    isl_gloss, translation_mode = translator.translate_gloss_string_with_mode(asl_gloss)
     if not isl_gloss:
         return JSONResponse({"error": "No translatable gloss tokens were provided."}, status_code=400)
     return {
         "asl_gloss": asl_gloss,
         "isl_gloss": isl_gloss,
-        "translation_mode": "draft_rule_based",
+        "translation_mode": translation_mode,
         "review_required": True,
     }
 
@@ -284,6 +309,7 @@ async def translate_text(body: dict):
 @app.post("/generate-avatar")
 async def generate_avatar(body: dict):
     """Play a recorded pose sequence when available, otherwise show a labelled demo."""
+    _cleanup_generated_videos()
     isl_gloss = str(body.get("isl_gloss") or body.get("gloss") or "").strip()
     source_sentence = str(body.get("source_sentence") or "").strip()
     glosses = isl_gloss.split()

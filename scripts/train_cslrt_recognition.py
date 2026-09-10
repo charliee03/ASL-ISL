@@ -45,6 +45,10 @@ def main():
     parser.add_argument("--limit", type=int, help="Limit each split for a smoke test")
     parser.add_argument("--batch-size", type=int)
     parser.add_argument("--checkpoint-dir", help="Override model output directory")
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume model, optimizer, and scheduler from training_state.pt")
+    parser.add_argument("--max-epochs-per-run", type=int,
+                        help="Stop cleanly after this many epochs so CPU training can be resumed")
     args = parser.parse_args()
     config = yaml.safe_load(Path(args.config).read_text())
     mc, dc, tc = config["model"], config["data"], config["training"]
@@ -91,13 +95,41 @@ def main():
     criterion = nn.CrossEntropyLoss(label_smoothing=tc.get("label_smoothing", 0.0))
     optimizer = torch.optim.AdamW(model.parameters(), lr=tc["lr"], weight_decay=tc["weight_decay"])
     epochs = args.epochs or tc["epochs"]
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     checkpoint_dir = Path(args.checkpoint_dir or tc["checkpoint_dir"])
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
+    state_path = checkpoint_dir / "training_state.pt"
+    log_path = checkpoint_dir / "training_log.csv"
+
+    start_epoch, best_accuracy, stale = 1, -1.0, 0
+    if args.resume:
+        if not state_path.exists():
+            raise FileNotFoundError(f"Cannot resume: {state_path} does not exist")
+        state = torch.load(state_path, map_location=device, weights_only=False)
+        if state.get("classes") != train_data.classes:
+            raise ValueError("Cannot resume: checkpoint vocabulary does not match the current split")
+        if state.get("total_epochs") != epochs:
+            raise ValueError(
+                f"Cannot resume: checkpoint was planned for {state.get('total_epochs')} epochs, not {epochs}"
+            )
+        model.load_state_dict(state["model_state_dict"])
+        optimizer.load_state_dict(state["optimizer_state_dict"])
+        scheduler.load_state_dict(state["scheduler_state_dict"])
+        start_epoch = int(state["next_epoch"])
+        best_accuracy = float(state["best_accuracy"])
+        stale = int(state["stale"])
+        if "torch_rng_state" in state:
+            torch.set_rng_state(state["torch_rng_state"])
+        if "python_rng_state" in state:
+            random.setstate(state["python_rng_state"])
+    elif log_path.exists():
+        # A fresh run must not silently mix its measurements with an older experiment.
+        log_path.unlink()
     resolved_config = {**config, "model": mc, "data": dc, "training": tc}
-    (checkpoint_dir / "resolved_config.yaml").write_text(
-        yaml.safe_dump(resolved_config, sort_keys=False), encoding="utf-8"
-    )
+    if not args.resume:
+        (checkpoint_dir / "resolved_config.yaml").write_text(
+            yaml.safe_dump(resolved_config, sort_keys=False), encoding="utf-8"
+        )
     runtime = {
         "python": platform.python_version(),
         "pytorch": torch.__version__,
@@ -108,12 +140,18 @@ def main():
         "classes": len(train_data.classes),
         "trainable_parameters": sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad),
     }
-    (checkpoint_dir / "runtime.json").write_text(json.dumps(runtime, indent=2), encoding="utf-8")
-    log_path = checkpoint_dir / "training_log.csv"
-    log_path.write_text("epoch,train_loss,train_accuracy,val_loss,val_accuracy,learning_rate\n")
-    best_accuracy, stale = -1.0, 0
-    print(f"Device: {device}; seed={seed}; train={len(train_data)}, val={len(val_data)}, classes={len(train_data.classes)}")
-    for epoch in range(1, epochs + 1):
+    if not args.resume:
+        (checkpoint_dir / "runtime.json").write_text(json.dumps(runtime, indent=2), encoding="utf-8")
+        log_path.write_text("epoch,train_loss,train_accuracy,val_loss,val_accuracy,learning_rate\n")
+    if start_epoch > epochs:
+        print(f"Training already completed through epoch {epochs}; best validation accuracy: {best_accuracy:.2%}")
+        return
+    end_epoch = min(epochs, start_epoch + (args.max_epochs_per_run or epochs) - 1)
+    print(
+        f"Device: {device}; seed={seed}; train={len(train_data)}, val={len(val_data)}, "
+        f"classes={len(train_data.classes)}; epochs {start_epoch}-{end_epoch}/{epochs}"
+    )
+    for epoch in range(start_epoch, end_epoch + 1):
         epoch_learning_rate = optimizer.param_groups[0]["lr"]
         model.train()
         loss_sum = correct = total = 0
@@ -145,9 +183,21 @@ def main():
                         "best_val_accuracy": best_accuracy}, checkpoint_dir / "best_model.pt")
         else:
             stale += 1
-            if stale >= tc["patience"]:
-                print(f"Early stopping after {epoch} epochs")
-                break
+        torch.save({
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "scheduler_state_dict": scheduler.state_dict(),
+            "classes": train_data.classes,
+            "next_epoch": epoch + 1,
+            "best_accuracy": best_accuracy,
+            "stale": stale,
+            "total_epochs": epochs,
+            "torch_rng_state": torch.get_rng_state(),
+            "python_rng_state": random.getstate(),
+        }, state_path)
+        if stale >= tc["patience"]:
+            print(f"Early stopping after {epoch} epochs")
+            break
     (checkpoint_dir / "vocabulary.json").write_text(json.dumps(train_data.classes, indent=2))
     print(f"Best validation accuracy: {best_accuracy:.2%}")
 

@@ -13,6 +13,7 @@ const avatarLoading = document.getElementById('avatar-loading');
 const islVideo = document.getElementById('isl-video');
 const islGlossOutput = document.getElementById('isl-gloss-output');
 const avatarStatus = document.getElementById('avatar-status');
+const translationProvenance = document.getElementById('translation-provenance');
 
 let currentTranslationRequest = null;
 let recognitionAvailable = false;
@@ -184,7 +185,9 @@ webcamBtn.addEventListener('click', async () => {
     aslPreview.muted = true;
     aslPreview.hidden = false;
     clearVideoBtn.hidden = false;
-    webcamBtn.hidden = true;
+    // Keep this visible so the user can stop early; the same button switches
+    // from starting a capture to submitting the completed recording.
+    webcamBtn.hidden = false;
     await aslPreview.play();
     webcamChunks = [];
     const preferredType = [
@@ -231,6 +234,8 @@ clearVideoBtn.addEventListener('click', () => {
   videoUpload.value = '';
   aslGlossInput.value = '';
   aslGlossInput.disabled = false;
+  islGlossOutput.textContent = 'Awaiting translation...';
+  translationProvenance.textContent = 'Translation source: awaiting input.';
   updateTranslateButton();
   
   if (recognitionAvailable) {
@@ -250,6 +255,7 @@ translateBtn.addEventListener('click', async () => {
   islVideo.hidden = true;
   avatarLoading.hidden = false;
   islGlossOutput.textContent = "Translating grammar...";
+  translationProvenance.textContent = 'Translation source: processing draft.';
 
   try {
     // 1. Translate ASL to ISL
@@ -263,6 +269,16 @@ translateBtn.addEventListener('click', async () => {
     
     const islGloss = transData.isl_gloss || aslGloss;
     islGlossOutput.textContent = islGloss;
+    if (transData.translation_mode === 'gemini_constrained_draft') {
+      translationProvenance.textContent =
+        'Translation source: Gemini-constrained AI draft; signer review still required.';
+    } else if (transData.translation_mode === 'llama_draft') {
+      translationProvenance.textContent =
+        'Translation source: local Llama AI draft; signer review still required.';
+    } else {
+      translationProvenance.textContent =
+        'Translation source: deterministic rule-based draft; signer review still required.';
+    }
 
     // 2. Generate Avatar
     const genRes = await fetch('/generate-avatar', {
@@ -308,6 +324,7 @@ translateBtn.addEventListener('click', async () => {
   } catch (err) {
     showAvatarError(`Avatar error: ${err.message}`);
     islGlossOutput.textContent = "Translation failed.";
+    translationProvenance.textContent = 'Translation source: unavailable.';
   } finally {
     translateBtn.disabled = false;
   }

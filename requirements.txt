@@ -9,7 +9,9 @@ mediapipe>=0.10.9
 opencv-python>=4.8.0
 
 # Data & Utilities
-numpy>=1.24.0,<2
+# The main runtime is tested with NumPy 2.x; the isolated MediaPipe extraction
+# environment pins its compatible NumPy version separately in `.venv-cslrt`.
+numpy>=1.24.0
 scipy>=1.10.0
 pandas>=2.0.0
 matplotlib>=3.7.0
@@ -32,6 +34,9 @@ ffmpeg-python>=0.2.0
 
 # Optional: required only when AITE_ENABLE_LLM=true (4-bit quantisation)
 bitsandbytes>=0.41.0
+
+# Optional: required only when AITE_ENABLE_GEMINI=true
+google-genai>=1.0.0
 
 # Dev / Testing
 pytest>=7.0.0
