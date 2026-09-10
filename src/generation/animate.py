@@ -63,9 +63,16 @@ def draw_connections(canvas, landmarks, connections, color):
         )
 
 
-def process_file(json_path, save_video=None, no_show=False, override_text=None, playback_fps=None):
-    with open(json_path, "r") as f:
-        data = json.load(f)
+def process_file(json_path_or_data, save_video=None, no_show=False, override_text=None, playback_fps=None):
+    # Accept either a file path or an already-loaded dict (e.g. from fingerspell)
+    if isinstance(json_path_or_data, dict):
+        data = json_path_or_data
+        gloss = override_text if override_text else "fingerspell"
+    else:
+        json_path = json_path_or_data
+        with open(json_path, "r") as f:
+            data = json.load(f)
+        gloss = override_text if override_text else json_path.stem
 
     frames = data["frames"]
     source_fps = data.get("fps", 30)
@@ -73,7 +80,6 @@ def process_file(json_path, save_video=None, no_show=False, override_text=None, 
     if fps <= 0:
         raise ValueError("playback fps must be positive")
     delay = max(1, int(1000 / fps))
-    gloss = override_text if override_text else json_path.stem
 
     print(f"\nPlaying: {gloss}")
     print(f"Frames : {len(frames)}")
@@ -136,6 +142,36 @@ def process_file(json_path, save_video=None, no_show=False, override_text=None, 
         # ---------------- Right Hand ---------------- #
         draw_connections(canvas, right, HAND_CONNECTIONS, (0,0,255))
         draw_landmarks(canvas, right, (0,0,255))
+
+        # ---------------- Per-frame label (bottom-right) ---------------- #
+        frame_label = frame.get("label")
+        if frame_label:
+            label_text = str(frame_label)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 1.8
+            thickness = 3
+            (tw, th), _ = cv2.getTextSize(label_text, font, font_scale, thickness)
+            margin = 24
+            tx = CANVAS_W - tw - margin
+            ty = CANVAS_H - margin
+            # subtle dark backdrop for readability
+            cv2.rectangle(
+                canvas,
+                (tx - 8, ty - th - 8),
+                (tx + tw + 8, ty + 8),
+                (30, 30, 30),
+                -1,
+            )
+            cv2.putText(
+                canvas,
+                label_text,
+                (tx, ty),
+                font,
+                font_scale,
+                (0, 220, 180),
+                thickness,
+                cv2.LINE_AA,
+            )
 
         if writer:
             writer.write(canvas)

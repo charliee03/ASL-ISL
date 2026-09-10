@@ -4,6 +4,7 @@ const aslPreview = document.getElementById('asl-preview');
 const aslGlossInput = document.getElementById('asl-gloss-input');
 const translateBtn = document.getElementById('translate-btn');
 const webcamBtn = document.getElementById('webcam-btn');
+const clearVideoBtn = document.getElementById('clear-video-btn');
 const recognitionStatus = document.getElementById('recognition-status');
 
 const avatarStage = document.getElementById('avatar-stage');
@@ -119,6 +120,8 @@ async function handleVideoFile(file) {
   uploadZone.hidden = true;
   aslPreview.src = url;
   aslPreview.hidden = false;
+  clearVideoBtn.hidden = false;
+  webcamBtn.hidden = true;
   aslPreview.play();
 
   // Call recognition API
@@ -180,6 +183,8 @@ webcamBtn.addEventListener('click', async () => {
     aslPreview.srcObject = webcamStream;
     aslPreview.muted = true;
     aslPreview.hidden = false;
+    clearVideoBtn.hidden = false;
+    webcamBtn.hidden = true;
     await aslPreview.play();
     webcamChunks = [];
     const preferredType = [
@@ -213,6 +218,25 @@ webcamBtn.addEventListener('click', async () => {
     }, 8000);
   } catch (error) {
     recognitionStatus.textContent = `Webcam unavailable: ${error.message}`;
+  }
+});
+
+clearVideoBtn.addEventListener('click', () => {
+  aslPreview.hidden = true;
+  aslPreview.src = '';
+  aslPreview.srcObject = null;
+  uploadZone.hidden = false;
+  clearVideoBtn.hidden = true;
+  webcamBtn.hidden = false;
+  videoUpload.value = '';
+  aslGlossInput.value = '';
+  aslGlossInput.disabled = false;
+  updateTranslateButton();
+  
+  if (recognitionAvailable) {
+    recognitionStatus.textContent = 'Upload or record a video, or type gloss manually.';
+  } else {
+    recognitionStatus.textContent = 'Video recognition is disabled until the validated model is deployed; manual gloss input remains available.';
   }
 });
 
@@ -265,6 +289,8 @@ translateBtn.addEventListener('click', async () => {
       avatarStatus.textContent = `Recorded pose playback: ${genData.source_sentence}${matchNote}`;
     } else if (genData.mode === 'landmark_playback') {
       avatarStatus.textContent = `Recorded word-pose playback: ${genData.source_gloss}`;
+    } else if (genData.mode === 'fingerspell') {
+      avatarStatus.textContent = `Fingerspelling: no recorded ISL sign found — showing letter-by-letter hand-shapes.`;
     } else {
       avatarStatus.textContent = 'No matching recorded sign was found; showing the illustrative demo.';
     }
