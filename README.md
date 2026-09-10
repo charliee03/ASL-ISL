@@ -20,13 +20,25 @@
 
 ## Project Status
 
-> **Current Phase:** Weeks 5-8 complete (ASL Recognition, ASL-ISL Translation, GAN Avatar Generation)
+> **Current phase:** Research prototype with a validated MSASL-100 isolated-sign
+> recognizer and limited recorded-pose playback. ASL-to-ISL translation and
+> generative avatar work are not production-ready.
+
+See [Project Status, Reproduction Guide, and Roadmap](docs/PROJECT_STATUS_AND_ROADMAP.md)
+for the authoritative list of completed changes, measured model results, current
+limitations, reproducible commands, and prioritized future work.
 
 ---
 
 ## Overview
 
-AITE is a modular pipeline for real-time cross-sign-language translation between American Sign Language (ASL) and Indian Sign Language (ISL). The system takes video input (webcam, upload, or YouTube URL), recognizes ASL signs, translates the gloss across languages, and renders the output as an avatar animation.
+AITE is a research prototype for a modular cross-sign-language pipeline between
+American Sign Language (ASL) and Indian Sign Language (ISL). The intended system
+takes ASL video, recognizes signs, translates the gloss across languages, and
+renders ISL motion. The current tested demo supports one isolated MSASL-100-style
+ASL sign from an uploaded or webcam-recorded clip when recognition is explicitly
+enabled. It otherwise uses manual text and recorded 2D landmark playback;
+continuous recognition and generative animation remain future work.
 
 ### Pipeline
 
@@ -36,9 +48,13 @@ Input (Video) → Preprocessing → ASL Recognition → Cross-lingual Translatio
 
 ### Stages
 
-1. **Sign Recognition** — Transformer-based model (trained on WLASL) extracts ASL gloss/text from video frames using MediaPipe hand keypoints.
-2. **Cross-Lingual Translation** — Lightweight quantized LLM transforms ASL grammar/syntax to ISL.
-3. **Sign Generation** — GAN-based avatar renders ISL signs in real-time (≥15 FPS).
+1. **Sign Recognition** — A calibrated 100-class isolated-sign Transformer is
+   available behind an explicit feature flag. It is not a continuous ASL recognizer
+   and does not cover signs outside its fixed vocabulary.
+2. **Cross-Lingual Translation** — A deterministic draft rule layer is available;
+   the optional Llama model is disabled and ISL expert review is still required.
+3. **Sign Generation** — The demo retrieves recorded 2D landmark motion. A trained
+   pose generator/GAN and realistic avatar have not been completed.
 
 ---
 
@@ -53,8 +69,9 @@ ASL-ISL/
 │   ├── web/                # Web application
 │   └── utils/              # Preprocessing, feature extraction, helpers
 ├── data/
-│   ├── wlasl/              # WLASL dataset (sign videos, glosses)
-│   └── isl/                # ISL-CSLGR dataset
+│   ├── asl/                # Validated derived MSASL features and splits
+│   └── isl/                # INCLUDE-50 and ISL-CSLRT derived data
+├── Dataset/MS-ASL/         # Local MSASL annotations/videos (not for deployment)
 ├── scripts/                # Jupyter notebooks for exploration & training
 ├── configs/                # Model & pipeline configuration files
 ├── models/                 # Trained model checkpoints
@@ -70,8 +87,9 @@ ASL-ISL/
 
 | Dataset | Source | Description |
 |---------|--------|-------------|
-| [WLASL](https://www.kaggle.com/datasets/risangbaskoro/wlasl-processed) | IEEE / Public | 21,000+ clips, 2,000+ ASL signs |
-| [ISL-CSLGR](https://www.kaggle.com/datasets/drblack00/isl-csltr-indian-sign-language-dataset) | Public | Indian Sign Language gestures |
+| [MSASL](https://microsoft.github.io/data-for-society/dataset?d=MS-ASL-American-Sign-Language-Dataset) | Microsoft | Multi-signer isolated ASL videos |
+| [INCLUDE-50](https://www.kaggle.com/datasets/yuvrajjoshi1110/include-50) | Public research dataset | Isolated ISL videos used for playback |
+| ISL-CSLRT | Local licensed research copy | ISL sentence frame sequences and word images |
 
 ---
 
@@ -79,8 +97,9 @@ ASL-ISL/
 
 **Languages:** Python, JavaScript  
 **Frameworks:** PyTorch / TensorFlow, MediaPipe, Hugging Face Transformers, OpenCV  
-**Frontend:** React + Node.js  
-**Infrastructure:** GPU-enabled systems, optional cloud (AWS/GCP)
+**Frontend:** HTML, CSS, and browser JavaScript
+
+**Infrastructure:** Local FastAPI service; GPU/cloud training is future work
 
 ---
 
@@ -120,6 +139,14 @@ A comprehensive review of 30 papers (2018–2026) covering sign language recogni
 - **Key gap identified:** No existing system performs real-time cross-sign-language translation (ASL↔ISL) handling syntactic and gestural differences
 
 See full table in [`docs/literature_review.md`](docs/literature_review.md).
+
+---
+
+## System Requirements
+
+- **Main application:** project `.venv`
+- **CSLRT landmark extraction:** Python 3.12 `.venv-cslrt` with MediaPipe 0.10.21
+- **ffmpeg**: Must be installed and available in your system's PATH for the avatar generation to work.
 
 ---
 

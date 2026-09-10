@@ -1,0 +1,31 @@
+model:
+  num_frames: 32
+  num_keypoints: 75
+  d_model: 96
+  nhead: 4
+  num_encoder_layers: 2
+  dropout: 0.2
+  use_velocity: true
+  use_presence: true
+
+data:
+  dataset_type: msasl_npz
+  keypoints_dir: data/asl/msasl100_keypoints
+  splits_dir: data/asl/msasl100_splits
+  batch_size: 64
+  num_workers: 0
+  class_balanced_sampling: false
+  temporal_crop_min_ratio: 0.9
+  scale_amount: 0.03
+  noise_std: 0.003
+  keypoint_mask_probability: 0.01
+  frame_dropout_probability: 0.01
+
+training:
+  seed: 42
+  epochs: 80
+  lr: 0.0003
+  weight_decay: 0.0005
+  label_smoothing: 0.05
+  patience: 15
+  checkpoint_dir: models/msasl100_pose_recognition

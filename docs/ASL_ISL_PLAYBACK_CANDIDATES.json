@@ -1,0 +1,621 @@
+{
+  "purpose": "Data-availability candidates only; not linguistic equivalence evidence.",
+  "source_annotations": "Dataset/MS-ASL/MSASL_unified.json",
+  "include50_targets": 61,
+  "implemented_paths": 3,
+  "exact_english_label_candidates": 28,
+  "targets_without_exact_msasl_label": 30,
+  "candidates": [
+    {
+      "include50_target": "bear",
+      "normalised_source_label": "bear",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 12,
+        "val": 2
+      },
+      "msasl_total_clips": 16,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "break",
+      "normalised_source_label": "break",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 18
+      },
+      "msasl_total_clips": 20,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "brinjal",
+      "normalised_source_label": "brinjal",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "budget",
+      "normalised_source_label": "budget",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "busy",
+      "normalised_source_label": "busy",
+      "msasl_split_counts": {
+        "test": 6,
+        "train": 14,
+        "val": 2
+      },
+      "msasl_total_clips": 22,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "cabbage",
+      "normalised_source_label": "cabbage",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "carrot",
+      "normalised_source_label": "carrot",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 11,
+        "val": 4
+      },
+      "msasl_total_clips": 17,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "cauliflower",
+      "normalised_source_label": "cauliflower",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "chilli",
+      "normalised_source_label": "chilli",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "clean",
+      "normalised_source_label": "clean",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "close",
+      "normalised_source_label": "close",
+      "msasl_split_counts": {
+        "test": 1,
+        "train": 8,
+        "val": 6
+      },
+      "msasl_total_clips": 15,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "come",
+      "normalised_source_label": "come",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "cook",
+      "normalised_source_label": "cook",
+      "msasl_split_counts": {
+        "test": 3,
+        "train": 25,
+        "val": 5
+      },
+      "msasl_total_clips": 33,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "crocodile",
+      "normalised_source_label": "crocodile",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "cry",
+      "normalised_source_label": "cry",
+      "msasl_split_counts": {
+        "test": 4,
+        "train": 8,
+        "val": 5
+      },
+      "msasl_total_clips": 17,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "cucumber",
+      "normalised_source_label": "cucumber",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "deer",
+      "normalised_source_label": "deer",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 8,
+        "val": 2
+      },
+      "msasl_total_clips": 12,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "drink",
+      "normalised_source_label": "drink",
+      "msasl_split_counts": {
+        "test": 1,
+        "train": 34,
+        "val": 4
+      },
+      "msasl_total_clips": 39,
+      "status": "implemented_unreviewed",
+      "enablement_requirement": "ISL-expert review and continued held-out monitoring"
+    },
+    {
+      "include50_target": "elephant",
+      "normalised_source_label": "elephant",
+      "msasl_split_counts": {
+        "test": 1,
+        "train": 13,
+        "val": 2
+      },
+      "msasl_total_clips": 16,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "exam",
+      "normalised_source_label": "exam",
+      "msasl_split_counts": {
+        "test": 4,
+        "train": 8,
+        "val": 1
+      },
+      "msasl_total_clips": 13,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "fedup",
+      "normalised_source_label": "fedup",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "fever",
+      "normalised_source_label": "fever",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "giraffe",
+      "normalised_source_label": "giraffe",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 11,
+        "val": 2
+      },
+      "msasl_total_clips": 15,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "give",
+      "normalised_source_label": "give",
+      "msasl_split_counts": {
+        "test": 4,
+        "train": 13,
+        "val": 3
+      },
+      "msasl_total_clips": 20,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "good_afternoon",
+      "normalised_source_label": "good afternoon",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "good_morning",
+      "normalised_source_label": "good morning",
+      "msasl_split_counts": {
+        "test": 1,
+        "train": 8,
+        "val": 2
+      },
+      "msasl_total_clips": 11,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "hello",
+      "normalised_source_label": "hello",
+      "msasl_split_counts": {
+        "test": 17,
+        "train": 18,
+        "val": 6
+      },
+      "msasl_total_clips": 41,
+      "status": "implemented_unreviewed",
+      "enablement_requirement": "ISL-expert review and continued held-out monitoring"
+    },
+    {
+      "include50_target": "hug",
+      "normalised_source_label": "hug",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "injury",
+      "normalised_source_label": "injury",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "interview",
+      "normalised_source_label": "interview",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "jump",
+      "normalised_source_label": "jump",
+      "msasl_split_counts": {
+        "test": 3,
+        "train": 10,
+        "val": 3
+      },
+      "msasl_total_clips": 16,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "karnataka",
+      "normalised_source_label": "karnataka",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "key",
+      "normalised_source_label": "key",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 11,
+        "val": 2
+      },
+      "msasl_total_clips": 15,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "knife",
+      "normalised_source_label": "knife",
+      "msasl_split_counts": {
+        "test": 3,
+        "train": 12,
+        "val": 2
+      },
+      "msasl_total_clips": 17,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "lemon",
+      "normalised_source_label": "lemon",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "lion",
+      "normalised_source_label": "lion",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 13,
+        "val": 3
+      },
+      "msasl_total_clips": 18,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "man",
+      "normalised_source_label": "man",
+      "msasl_split_counts": {
+        "test": 4,
+        "train": 29,
+        "val": 8
+      },
+      "msasl_total_clips": 41,
+      "status": "implemented_unreviewed",
+      "enablement_requirement": "ISL-expert review and continued held-out monitoring"
+    },
+    {
+      "include50_target": "maths",
+      "normalised_source_label": "maths",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "maybe",
+      "normalised_source_label": "maybe",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 7,
+        "val": 3
+      },
+      "msasl_total_clips": 12,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "monkey",
+      "normalised_source_label": "monkey",
+      "msasl_split_counts": {
+        "test": 3,
+        "train": 8,
+        "val": 2
+      },
+      "msasl_total_clips": 13,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "onion",
+      "normalised_source_label": "onion",
+      "msasl_split_counts": {
+        "test": 4,
+        "train": 8,
+        "val": 3
+      },
+      "msasl_total_clips": 15,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "peacock",
+      "normalised_source_label": "peacock",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "pigeon",
+      "normalised_source_label": "pigeon",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "pour",
+      "normalised_source_label": "pour",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "radish",
+      "normalised_source_label": "radish",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "sparrow",
+      "normalised_source_label": "sparrow",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "still",
+      "normalised_source_label": "still",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 5,
+        "val": 5
+      },
+      "msasl_total_clips": 12,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "switch",
+      "normalised_source_label": "switch",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "tea",
+      "normalised_source_label": "tea",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 18,
+        "val": 8
+      },
+      "msasl_total_clips": 28,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "temple",
+      "normalised_source_label": "temple",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "thank_you",
+      "normalised_source_label": "thank you",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "tiger",
+      "normalised_source_label": "tiger",
+      "msasl_split_counts": {
+        "test": 3,
+        "train": 12,
+        "val": 2
+      },
+      "msasl_total_clips": 17,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "turtle",
+      "normalised_source_label": "turtle",
+      "msasl_split_counts": {
+        "test": 2,
+        "train": 14,
+        "val": 1
+      },
+      "msasl_total_clips": 17,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "umbrella",
+      "normalised_source_label": "umbrella",
+      "msasl_split_counts": {
+        "test": 3,
+        "train": 7,
+        "val": 4
+      },
+      "msasl_total_clips": 14,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "uncle",
+      "normalised_source_label": "uncle",
+      "msasl_split_counts": {
+        "test": 3,
+        "train": 25,
+        "val": 3
+      },
+      "msasl_total_clips": 31,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "vegetables",
+      "normalised_source_label": "vegetables",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "volcano",
+      "normalised_source_label": "volcano",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "what_is_your_name",
+      "normalised_source_label": "what is your name",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "wife",
+      "normalised_source_label": "wife",
+      "msasl_split_counts": {
+        "test": 1,
+        "train": 23,
+        "val": 3
+      },
+      "msasl_total_clips": 27,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "writer",
+      "normalised_source_label": "writer",
+      "msasl_split_counts": {},
+      "msasl_total_clips": 0,
+      "status": "no_exact_msasl_source_label",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    },
+    {
+      "include50_target": "wrong",
+      "normalised_source_label": "wrong",
+      "msasl_split_counts": {
+        "test": 6,
+        "train": 20,
+        "val": 8
+      },
+      "msasl_total_clips": 34,
+      "status": "exact_english_label_candidate_requires_isl_review",
+      "enablement_requirement": "ISL-expert review, ASL feature extraction, signer-independent evaluation, and an approved mapping"
+    }
+  ]
+}

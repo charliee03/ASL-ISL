@@ -1,0 +1,10 @@
+{
+  "python": "3.14.7",
+  "pytorch": "2.13.0+cu130",
+  "device": "cpu",
+  "seed": 42,
+  "train_samples": 2747,
+  "validation_samples": 643,
+  "classes": 100,
+  "trainable_parameters": 741476
+}

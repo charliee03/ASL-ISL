@@ -1,0 +1,71 @@
+{
+  "scope": "Three implemented ASL isolated-sign to recorded ISL-pose paths only.",
+  "recognition_threshold": 0.5903989672660828,
+  "passed": 3,
+  "total": 3,
+  "results": [
+    {
+      "video": "Dataset/MS-ASL/videos/class_0_signer_26_22302.mp4",
+      "expected_gloss": "hello",
+      "gloss": "hello",
+      "confidence": 0.6549705266952515,
+      "accepted": true,
+      "tracking": {
+        "decoded_frames": 32,
+        "decoded_coverage": 1.0,
+        "pose_frames": 32,
+        "pose_coverage": 1.0,
+        "hand_frames": 30,
+        "hand_coverage": 0.9375,
+        "source_frame_count": 40,
+        "source_fps": 29.97002997002997
+      },
+      "isl_gloss": "NAMASKAR",
+      "avatar_mode": "landmark_playback",
+      "avatar_source_gloss": "hello",
+      "passed": true
+    },
+    {
+      "video": "Dataset/MS-ASL/videos/class_56_signer_10_22073.mp4",
+      "expected_gloss": "drink",
+      "gloss": "drink",
+      "confidence": 0.8225951194763184,
+      "accepted": true,
+      "tracking": {
+        "decoded_frames": 32,
+        "decoded_coverage": 1.0,
+        "pose_frames": 32,
+        "pose_coverage": 1.0,
+        "hand_frames": 25,
+        "hand_coverage": 0.78125,
+        "source_frame_count": 95,
+        "source_fps": 29.97002997002997
+      },
+      "isl_gloss": "drink",
+      "avatar_mode": "landmark_playback",
+      "avatar_source_gloss": "drink",
+      "passed": true
+    },
+    {
+      "video": "Dataset/MS-ASL/videos/class_58_signer_10_24288.mp4",
+      "expected_gloss": "man",
+      "gloss": "man",
+      "confidence": 0.6317781209945679,
+      "accepted": true,
+      "tracking": {
+        "decoded_frames": 32,
+        "decoded_coverage": 1.0,
+        "pose_frames": 32,
+        "pose_coverage": 1.0,
+        "hand_frames": 16,
+        "hand_coverage": 0.5,
+        "source_frame_count": 112,
+        "source_fps": 29.97002997002997
+      },
+      "isl_gloss": "man",
+      "avatar_mode": "landmark_playback",
+      "avatar_source_gloss": "man",
+      "passed": true
+    }
+  ]
+}

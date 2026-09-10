@@ -24,12 +24,18 @@ class PositionalEncoding(nn.Module):
 
 class SignRecognitionTransformer(nn.Module):
     def __init__(self, num_keypoints=27, d_model=256, nhead=8,
-                 num_encoder_layers=6, vocab_size=2000, dropout=0.1):
+                 num_encoder_layers=6, vocab_size=2000, dropout=0.1,
+                 use_velocity=False, use_presence=False):
         super().__init__()
         self.num_keypoints = num_keypoints
         self.d_model = d_model
+        self.use_velocity = use_velocity
+        self.use_presence = use_presence
         
-        self.input_proj = nn.Linear(num_keypoints * 3, d_model)
+        input_width = num_keypoints * 3 * (2 if use_velocity else 1)
+        if use_presence:
+            input_width += num_keypoints
+        self.input_proj = nn.Linear(input_width, d_model)
         self.pos_encoder = PositionalEncoding(d_model, dropout=dropout)
         
         encoder_layer = nn.TransformerEncoderLayer(
@@ -56,8 +62,19 @@ class SignRecognitionTransformer(nn.Module):
     def forward(self, x, tgt=None):
         # tgt is accepted for backward compatibility, but not used in encoder-only architecture
         batch_size = x.size(0)
+        presence = None
         if x.dim() == 4:
+            if self.use_presence:
+                presence = (x.abs().sum(dim=-1) > 0).to(dtype=x.dtype)
             x = x.view(batch_size, x.size(1), -1)
+        elif self.use_presence:
+            raise ValueError("use_presence requires input shaped (batch, frames, keypoints, 3)")
+        if self.use_velocity:
+            velocity = torch.zeros_like(x)
+            velocity[:, 1:] = x[:, 1:] - x[:, :-1]
+            x = torch.cat((x, velocity), dim=-1)
+        if presence is not None:
+            x = torch.cat((x, presence), dim=-1)
             
         x = self.input_proj(x)
         x = self.pos_encoder(x)

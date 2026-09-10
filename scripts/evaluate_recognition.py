@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate the trained SignRecognitionTransformer on the WLASL-100 validation set."""
+"""Evaluate a trained recognition checkpoint on the configured validation dataset."""
 
 import argparse
 import csv
@@ -17,8 +17,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from recognition.dataset import WLASLDataset, collate_keypoints
-from recognition.model import SignRecognitionTransformer
+from src.recognition.dataset import MSASLDataset, WLASLDataset, collate_keypoints
+from src.recognition.model import SignRecognitionTransformer
 from src.utils.metrics import Metrics
 
 
@@ -26,15 +26,17 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate ASL Recognition Model")
     parser.add_argument("--config", default="configs/recognition.yaml",
                         help="Path to config file")
-    parser.add_argument("--data-root", default="data/wlasl",
+    parser.add_argument("--data-root", default="Dataset/MS-ASL",
                         help="Root directory for dataset")
-    parser.add_argument("--annotation-file", default="data/wlasl/nslt_100.json",
-                        help="Path to annotation file")
+    parser.add_argument("--annotation-file", default="Dataset/MS-ASL/MSASL_unified.json",
+                        help="Path to unified validation annotation file")
     parser.add_argument("--checkpoint", default="models/recognition/best_model.pt",
                         help="Path to model checkpoint")
     parser.add_argument("--output", default="models/recognition/eval_results.json",
                         help="Path to write evaluation results JSON")
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Optional cap on validation samples for a quick smoke test")
     return parser.parse_args()
 
 
@@ -120,13 +122,34 @@ def evaluate():
     data_root = Path(args.data_root)
     annotation_file = Path(args.annotation_file)
 
-    val_dataset = WLASLDataset(
-        data_root=data_root,
-        annotation_file=str(annotation_file),
-        split="val",
-        num_frames=num_frames,
-        transform=None,
-    )
+    dataset_name = config.get("data", {}).get("dataset", "wlasl").lower()
+    dataset_cls = MSASLDataset if dataset_name == "msasl" else WLASLDataset
+    dataset_kwargs = {
+        "data_root": data_root,
+        "annotation_file": str(annotation_file),
+        "split": "val",
+        "num_frames": num_frames,
+        "transform": None,
+    }
+    if dataset_cls is MSASLDataset:
+        dataset_kwargs["preload"] = False
+    val_dataset = dataset_cls(**dataset_kwargs)
+
+    vocab_path = checkpoint_path.parent / "gloss_vocab.json"
+    if not vocab_path.exists():
+        raise FileNotFoundError(f"Checkpoint vocabulary is required for evaluation: {vocab_path}")
+    with vocab_path.open() as f:
+        vocab_artifact = json.load(f)
+    gloss_to_id = vocab_artifact.get("gloss_to_id", {})
+    if not gloss_to_id:
+        raise ValueError(f"Invalid checkpoint vocabulary artifact: {vocab_path}")
+    # Evaluation labels must use exactly the class IDs used when the checkpoint
+    # was trained—not an independently sorted dataset vocabulary.
+    val_dataset.samples = [sample for sample in val_dataset.samples if sample["gloss"] in gloss_to_id]
+    if args.limit is not None:
+        val_dataset.samples = val_dataset.samples[:args.limit]
+    val_dataset.word2idx = gloss_to_id
+    val_dataset.classes = [gloss for gloss, _ in sorted(gloss_to_id.items(), key=lambda item: item[1])]
 
     num_classes = len(val_dataset.classes)
     num_samples = len(val_dataset)
@@ -262,7 +285,7 @@ def evaluate():
     # ── Assemble results ─────────────────────────────────────────────────
     results = {
         "model": "SignRecognitionTransformer",
-        "dataset": "WLASL-100",
+        "dataset": dataset_name,
         "split": "val",
         "num_samples": num_samples,
         "num_classes": num_classes,

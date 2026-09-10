@@ -1,0 +1,27 @@
+model:
+  num_frames: 1
+  num_keypoints: 75
+  d_model: 64
+  nhead: 4
+  num_encoder_layers: 1
+  dropout: 0.3
+
+data:
+  keypoints_dir: data/isl/cslrt_word_keypoints
+  splits_dir: data/isl/cslrt_word_splits
+  batch_size: 32
+  num_workers: 0
+  class_balanced_sampling: true
+  scale_amount: 0.03
+  noise_std: 0.003
+  keypoint_mask_probability: 0.02
+  frame_dropout_probability: 0.0
+
+training:
+  seed: 42
+  epochs: 100
+  lr: 0.0005
+  weight_decay: 0.001
+  label_smoothing: 0.05
+  patience: 20
+  checkpoint_dir: models/cslrt_word_recognition

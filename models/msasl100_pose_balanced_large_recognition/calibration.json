@@ -1,0 +1,14 @@
+{
+  "selection_split": "val",
+  "samples": 643,
+  "target_selective_accuracy": 0.8,
+  "minimum_coverage": 0.2,
+  "selected": {
+    "threshold": 0.5903989672660828,
+    "accepted": 211,
+    "coverage": 0.328149300155521,
+    "selective_accuracy": 0.8009478672985783
+  },
+  "target_met": true,
+  "validation_results": "models/msasl100_pose_balanced_large_recognition/val_results.json"
+}
