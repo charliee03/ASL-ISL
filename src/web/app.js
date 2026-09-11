@@ -14,6 +14,7 @@ const islVideo = document.getElementById('isl-video');
 const islGlossOutput = document.getElementById('isl-gloss-output');
 const avatarStatus = document.getElementById('avatar-status');
 const translationProvenance = document.getElementById('translation-provenance');
+const avatarTokenRow = document.getElementById('avatar-token-row');
 
 let currentTranslationRequest = null;
 let recognitionAvailable = false;
@@ -22,6 +23,42 @@ let mediaRecorder = null;
 let webcamStream = null;
 let webcamChunks = [];
 let webcamTimer = null;
+let avatarTokenTimeListener = null;
+
+function clearAvatarTokens() {
+  if (avatarTokenTimeListener) {
+    islVideo.removeEventListener('timeupdate', avatarTokenTimeListener);
+    avatarTokenTimeListener = null;
+  }
+  avatarTokenRow.replaceChildren();
+  avatarTokenRow.hidden = true;
+}
+
+function showAvatarTokens(gloss, wordSpans, playbackFps) {
+  clearAvatarTokens();
+  const tokens = gloss.trim().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return;
+
+  const chips = tokens.map((token) => {
+    const chip = document.createElement('span');
+    chip.className = 'avatar-token';
+    chip.textContent = token;
+    avatarTokenRow.append(chip);
+    return chip;
+  });
+  avatarTokenRow.hidden = false;
+
+  if (!Array.isArray(wordSpans) || !wordSpans.length || !Number.isFinite(playbackFps)) return;
+  const setActiveToken = () => {
+    const frame = islVideo.currentTime * playbackFps;
+    const activeSpan = wordSpans.find((span) => frame >= span.start_frame && frame < span.end_frame);
+    const activeIndex = activeSpan ? wordSpans.indexOf(activeSpan) : -1;
+    chips.forEach((chip, index) => chip.classList.toggle('is-active', index === activeIndex));
+  };
+  avatarTokenTimeListener = setActiveToken;
+  islVideo.addEventListener('timeupdate', avatarTokenTimeListener);
+  setActiveToken();
+}
 
 fetch('/health')
   .then((response) => response.json())
@@ -31,7 +68,12 @@ fetch('/health')
       ? status.recognition_min_confidence
       : null;
     if (recognitionAvailable) {
-      recognitionStatus.textContent = `${status.recognition_scope}; low-confidence clips are rejected.`;
+      if (status.upload_mode === 'packaged_demo_clips_only') {
+        recognitionStatus.textContent =
+          `Upload-demo mode: use the supplied ${status.upload_demo_labels.join(', ')} clip(s) only.`;
+      } else {
+        recognitionStatus.textContent = `${status.recognition_scope}; low-confidence clips are rejected.`;
+      }
     } else {
       recognitionStatus.textContent = 'Video recognition is disabled until the validated model is deployed; manual gloss input remains available.';
     }
@@ -44,6 +86,7 @@ fetch('/health')
   });
 
 function showAvatarError(message) {
+  clearAvatarTokens();
   avatarLoading.hidden = true;
   islVideo.pause();
   islVideo.hidden = true;
@@ -236,6 +279,7 @@ clearVideoBtn.addEventListener('click', () => {
   aslGlossInput.disabled = false;
   islGlossOutput.textContent = 'Awaiting translation...';
   translationProvenance.textContent = 'Translation source: awaiting input.';
+  clearAvatarTokens();
   updateTranslateButton();
   
   if (recognitionAvailable) {
@@ -254,6 +298,7 @@ translateBtn.addEventListener('click', async () => {
   avatarPlaceholder.hidden = true;
   islVideo.hidden = true;
   avatarLoading.hidden = false;
+  clearAvatarTokens();
   islGlossOutput.textContent = "Translating grammar...";
   translationProvenance.textContent = 'Translation source: processing draft.';
 
@@ -305,11 +350,17 @@ translateBtn.addEventListener('click', async () => {
       avatarStatus.textContent = `Recorded pose playback: ${genData.source_sentence}${matchNote}`;
     } else if (genData.mode === 'landmark_playback') {
       avatarStatus.textContent = `Recorded word-pose playback: ${genData.source_gloss}`;
-    } else if (genData.mode === 'fingerspell') {
-      avatarStatus.textContent = `Fingerspelling: no recorded ISL sign found — showing letter-by-letter hand-shapes.`;
+    } else if (genData.mode === 'composite_playback') {
+      const recorded = (genData.recorded_glosses || []).join(', ');
+      const fingerspelled = (genData.fingerspelled_glosses || []).join(', ');
+      const parts = [];
+      if (recorded) parts.push(`recorded pose: ${recorded}`);
+      if (fingerspelled) parts.push(`fingerspelled: ${fingerspelled}`);
+      avatarStatus.textContent = `Composite playback — ${parts.join('; ')}.`;
     } else {
       avatarStatus.textContent = 'No matching recorded sign was found; showing the illustrative demo.';
     }
+    showAvatarTokens(islGloss, genData.word_spans, Number(genData.playback_fps));
     
     let sourceUrl;
     if (videoData) {

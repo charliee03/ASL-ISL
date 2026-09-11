@@ -82,7 +82,7 @@ Counts below distinguish saved experiment sample counts from historical extracti
 | INCLUDE-50 local collection | ISL recorded word playback; `data/isl/include-50`, `data/isl/keypoints` | Historical inventory: 61 word classes, 63 aliases | Local extraction count is not a claim about official release size or reviewed equivalence |
 | ISL-CSLRT sentence data | `data/isl/cslrt_raw`, `data/isl/cslrt_keypoints`, `data/isl/cslrt_splits` | 663 sequences / 97 sentence labels; 474 / 96 / 93 split | Recorded signer split: 1–5 train, 6 val, 7 test; sentences are not aligned ASL translations |
 | ISL-CSLRT word images | Static-word baseline | Historical 1,036 images / 114 labels; 699 / 168 / 169 | Static images cannot establish dynamic-sign performance |
-| Alphabet keypoints | `data/isl/alpha_keypoints/isl_alpha_*.json` | Awaiting teammate asset delivery and acceptance | Mock tests are not an asset inventory |
+| Alphabet keypoints | `data/isl/alpha_keypoints/isl_alpha_*.json` | 35 delivered local assets covering A–Z; visual acceptance remains pending | Asset presence and sequence tests do not establish legibility or signer approval |
 | iSign | Metadata/group-split preparation only | Full acquisition deferred | Not used to produce the reported main recognition or translation results |
 
 There is no verified parallel ASL–ISL sentence training/test corpus in this evidence package. The earlier approximately 228 GB discussion concerns a dataset acquisition decision, not a required 200 GB LLM. Review the acquisition document before allocating storage; its size estimate is historical, not a fresh download-size measurement.
@@ -140,7 +140,7 @@ See [TRANSLATION.md](TRANSLATION.md) for provider configuration and actual proce
 
 1. **Meaning loss in rules:** filler filtering is context-free and can remove meaningful words such as LIKE or RIGHT. Configured grammar descriptions are not evidence of executed tense, classifier, or negation rules.
 2. **Provider validation:** Gemini's allowlist contains mapping/alias tokens, not only signer-approved assets. Its additional `unsupported_source_tokens` field is appended after the main token check without equivalent source/completeness validation. No meaning-preservation or accuracy gain is proven.
-3. **Incomplete multiword playback:** absent a sentence match, the normal recorded-word path can select the first recognized word and render only that word while displaying the whole input. A returned MP4 is not proof the whole sentence was signed.
+3. **Composite multiword playback:** absent a sentence match, the runtime sequences every available recorded word and fingerspells unsupported tokens, reporting both categories to the browser. This is not a fluent sentence recording or proof of linguistic correctness; assess word boundaries, transitions and meaning-sensitive cases manually.
 4. **Approximate sentence lookup:** token overlap and sequence similarity, with a limited negation guard, can retrieve a different meaning. It is retrieval, not generative translation.
 5. **Alphabet gaps:** missing letters can be skipped; a nonempty fingerspelling result does not establish complete spelling. Confirm all N-A-N-D-I-T-A frames, order, transitions, handedness and legibility after real assets arrive.
 6. **Extraction runtime mismatch:** the current upload handler launches extraction using the API's Python executable. The historical verification helper uses `.venv-cslrt`. The older MediaPipe environment workaround therefore does not establish the current HTTP upload path is healthy.

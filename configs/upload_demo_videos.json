@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "description": "Packaged MSASL clips with saved validated features for the local upload demo.",
+  "videos": [
+    {
+      "label": "hello",
+      "source_video": "Dataset/MS-ASL/videos/class_0_signer_26_23348.mp4",
+      "features": "data/asl/msasl100_keypoints/class_0_signer_26_23348.npz",
+      "sha256": "b40d26ab8d07c303913f24192f26d3eb9646d0dc91734c6c1718386492867c9e"
+    },
+    {
+      "label": "drink",
+      "source_video": "Dataset/MS-ASL/videos/class_56_signer_10_22073.mp4",
+      "features": "data/asl/msasl100_keypoints/class_56_signer_10_22073.npz",
+      "sha256": "5064c20c36fd44b99bd440fd9ddbc7d1b7b3eebf0124faf3d93d209df4a74af9"
+    },
+    {
+      "label": "man",
+      "source_video": "Dataset/MS-ASL/videos/class_58_signer_10_24288.mp4",
+      "features": "data/asl/msasl100_keypoints/class_58_signer_10_24288.npz",
+      "sha256": "be8b1b34510df24767454bbbf8bf91238d6fab3984582af7e13036b9e24df416"
+    }
+  ]
+}

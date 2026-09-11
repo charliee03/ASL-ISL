@@ -33,6 +33,30 @@ def test_avatar_endpoint_is_registered_once_and_returns_playable_url():
     video_path.unlink()
 
 
+def test_composite_avatar_sequence_keeps_all_tokens(monkeypatch):
+    monkeypatch.setattr(server, "LANDMARK_ASSETS", {})
+    monkeypatch.setattr(server, "AVATAR_ALIASES", {})
+    monkeypatch.setattr(server, "LANDMARK_DIR", Path("/nonexistent"))
+    monkeypatch.setattr(
+        server,
+        "build_fingerspell_sequence",
+        lambda token: {"fps": 25.0, "frames": [{"token": token}]},
+    )
+
+    sequence, recorded, fingerspelled, spans = server._build_composite_avatar_sequence(["HELLO", "MAIN", "NAMAN"])
+
+    assert sequence is not None
+    assert [frame["token"] for frame in sequence["frames"] if "token" in frame] == ["hello", "main", "naman"]
+    assert recorded == []
+    assert fingerspelled == ["HELLO", "MAIN", "NAMAN"]
+    assert spans == [
+        {"token": "HELLO", "start_frame": 0, "end_frame": 1},
+        {"token": "MAIN", "start_frame": 11, "end_frame": 12},
+        {"token": "NAMAN", "start_frame": 22, "end_frame": 23},
+    ]
+    assert sum(frame.get("is_word_gap", False) for frame in sequence["frames"]) == 20
+
+
 def test_web_client_root_route_is_registered():
     root_routes = [
         route for route in server.app.routes
@@ -42,9 +66,14 @@ def test_web_client_root_route_is_registered():
     assert (server.WEB_DIR / "index.html").is_file()
 
 
+def test_packaged_upload_demo_assets_are_valid():
+    assert {asset["label"] for asset in server.DEMO_UPLOAD_ASSETS.values()} == {"hello", "drink", "man"}
+    assert all(asset["keypoints"].shape == (32, 75, 3) for asset in server.DEMO_UPLOAD_ASSETS.values())
+
+
 def test_translation_endpoint_returns_draft_gloss_for_manual_text():
-    response = asyncio.run(server.translate_text({"asl_gloss": "nice to meet you"}))
-    assert response["asl_gloss"] == "nice to meet you"
+    response = asyncio.run(server.translate_text({"asl_gloss": "hello water"}))
+    assert response["asl_gloss"] == "hello water"
     assert response["isl_gloss"]
     assert response["translation_mode"] == "draft_rule_based"
     assert response["review_required"] is True

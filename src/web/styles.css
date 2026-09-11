@@ -144,6 +144,34 @@ body {
   font-size: 0.85rem;
 }
 
+.avatar-token-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+}
+
+.avatar-token {
+  padding: 4px 9px;
+  border: 1px solid #86efac;
+  border-radius: 999px;
+  background: white;
+  color: #166534;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+.avatar-token.is-active {
+  background: var(--isl-color);
+  border-color: var(--isl-color);
+  color: white;
+  transform: scale(1.05);
+}
+
 .capture-controls {
   display: flex;
   flex-direction: column;

@@ -6,7 +6,8 @@ See [the paper handoff](IEEE_PAPER_HANDOFF.md) for the full evaluation plan.
 
 ## Default path
 
-Default behavior is deterministic draft conversion: split tokens, filter configured
+Default behavior first checks the explicitly curated exact-sentence overrides,
+then performs deterministic draft conversion: split tokens, filter configured
 fillers, apply direct gloss and special-case mappings, then join the result.
 Examples include HELLO → NAMASKAR and WATER → PANI. Hindi transliteration does
 not establish ISL grammar. Prose grammar transformations in configuration are
@@ -35,7 +36,10 @@ guarantee meaning preservation. No explicit timeout/output bound is configured
 in this layer. Provider errors normally fall back; with both flags enabled,
 Gemini failure may proceed to Llama. Exception logging deserves privacy review.
 
-Modes include `draft_rule_based`, `gemini_constrained_draft` and `llama_draft`.
+Modes include `curated_sentence_override`, `draft_rule_based`,
+`gemini_constrained_draft` and `llama_draft`. A curated entry records a supplied
+translation for that exact normalized input; it is still not a general-language
+correctness certificate.
 None is a correctness certificate. Llama-2-7b-chat is optional and has not been
 trained here on verified parallel ASL–ISL data. Four-bit loading is CUDA-dependent;
 do not claim a universal RAM requirement or measured latency.

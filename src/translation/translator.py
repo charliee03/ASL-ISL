@@ -3,6 +3,8 @@
 import json
 import logging
 import os
+import string
+import csv
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -35,6 +37,7 @@ class ASLtoISLTranslator:
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.gloss_vocab = self._load_gloss_vocab()
         self.grammar_rules = self._load_grammar_rules()
+        self.curated_sentence_overrides = self._load_curated_sentence_overrides()
         self.config = self._load_config()
         self.max_length = self.config.get("model", {}).get("max_length", 128)
         self.temperature = self.config.get("model", {}).get("temperature", 0.7)
@@ -87,6 +90,32 @@ class ASLtoISLTranslator:
         except (OSError, yaml.YAMLError):
             logger.exception("Could not load translation config from %s", path)
             return {}
+
+    def _load_curated_sentence_overrides(self) -> Dict[str, List[str]]:
+        """Load approved exact-sentence drafts from the local review sheet."""
+        overrides = {
+            str(source).casefold(): [str(token) for token in target if str(token).strip()]
+            for source, target in self.grammar_rules.get("sentence_overrides", {}).items()
+            if isinstance(target, list)
+        }
+        review_location = self.grammar_rules.get("curated_sentence_review_csv")
+        if not isinstance(review_location, str) or not review_location.strip():
+            return overrides
+        review_path = Path(self.grammar_rules_path).parent.parent / review_location
+        try:
+            with review_path.open(newline="", encoding="utf-8") as handle:
+                for row in csv.DictReader(handle):
+                    if row.get("review_status", "").strip().casefold() != "approved":
+                        continue
+                    source = row.get("source_sentence", "").strip()
+                    draft = row.get("draft_hinglish_text", "").strip().strip(string.punctuation)
+                    if source and draft:
+                        # Explicit configuration entries are the higher-priority
+                        # corrections when they disagree with the review draft.
+                        overrides.setdefault(source.casefold(), draft.split())
+        except OSError as error:
+            logger.warning("Could not load curated sentence review sheet %s: %s", review_path, error)
+        return overrides
 
     def _load_gemini_allowed_glosses(self) -> set[str]:
         """Load the local glosses that the renderer can identify or spell safely."""
@@ -144,11 +173,48 @@ class ASLtoISLTranslator:
         special = self.grammar_rules.get("special_cases", {})
         pronouns = special.get("pronouns", {})
         question_markers = special.get("question_markers", {})
+        copulas = special.get("copulas", {})
         result = []
-        for gloss in glosses:
+        for index, gloss in enumerate(glosses):
             key = gloss.upper()
-            result.append(mappings.get(key, pronouns.get(key, question_markers.get(key, gloss))))
+            previous_key = glosses[index - 1].upper() if index else ""
+            # AM is a supported copula generally; IS is only mapped in the
+            # explicit "MY NAME IS <name>" introduction pattern below.
+            mapped_copula = copulas.get(key, gloss) if key == "AM" or (
+                key == "IS" and previous_key == "NAME"
+            ) else gloss
+            result.append(
+                mappings.get(key, pronouns.get(key, question_markers.get(key, mapped_copula)))
+            )
+
+        # The manual-input path also accepts ordinary English-like text. For
+        # the common "I am <name/description>" form, place the mapped copula
+        # after its complement: "I AM NAMAN" -> "MEIN NAMAN HOON".
+        for index in range(len(glosses) - 1):
+            if glosses[index].upper() == "I" and glosses[index + 1].upper() == "AM":
+                copula = result.pop(index + 1)
+                result.append(copula)
+                break
+        for index in range(len(glosses) - 2):
+            if [token.upper() for token in glosses[index:index + 3]] == ["MY", "NAME", "IS"]:
+                copula = result.pop(index + 2)
+                result.append(copula)
+                break
         return result
+
+    def _sentence_override(self, glosses: List[str]) -> List[str] | None:
+        """Return a curated exact-sentence translation when one is available.
+
+        Sentence overrides are deliberately checked before generic rules and
+        optional providers. They preserve corrections supplied for a demo case
+        instead of letting a token-level or remote draft rewrite them.
+        """
+        key = " ".join(token.casefold() for token in glosses)
+        candidate = self.curated_sentence_overrides.get(key)
+        if not isinstance(candidate, list) or not all(isinstance(token, str) for token in candidate):
+            return None
+        result = [token.strip() for token in candidate if token.strip()]
+        return result or None
 
     def _refine_with_gemini(self, filtered: List[str], rule_based: List[str]) -> List[str] | None:
         """Produce a constrained ISL draft while retaining unknown terms verbatim."""
@@ -214,6 +280,9 @@ class ASLtoISLTranslator:
         if not asl_glosses:
             return [], "draft_rule_based"
         filtered = self._filter_glosses(asl_glosses)
+        override = self._sentence_override(filtered)
+        if override is not None:
+            return override, "curated_sentence_override"
         rule_based = self._apply_grammar_rules(filtered)
         if self.gemini_client is not None:
             refined = self._refine_with_gemini(filtered, rule_based)
@@ -248,8 +317,22 @@ class ASLtoISLTranslator:
         return [self.translate(glosses) for glosses in batch_glosses]
 
     def translate_gloss_string(self, asl_gloss_string: str) -> str:
-        return " ".join(self.translate(asl_gloss_string.strip().split()))
+        return " ".join(self.translate(self._tokenize_gloss_string(asl_gloss_string)))
 
     def translate_gloss_string_with_mode(self, asl_gloss_string: str) -> tuple[str, str]:
-        glosses, mode = self.translate_with_mode(asl_gloss_string.strip().split())
+        glosses, mode = self.translate_with_mode(self._tokenize_gloss_string(asl_gloss_string))
         return " ".join(glosses), mode
+
+    @staticmethod
+    def _tokenize_gloss_string(gloss_string: str) -> List[str]:
+        """Split manual text while ignoring punctuation surrounding a gloss.
+
+        Glosses such as ``THANK_YOU`` retain their internal underscore; this
+        only removes sentence punctuation that otherwise prevents a mapping
+        such as ``HELLO,`` from matching ``HELLO``.
+        """
+        return [
+            token.strip(string.punctuation)
+            for token in gloss_string.strip().split()
+            if token.strip(string.punctuation)
+        ]

@@ -14,8 +14,10 @@ CANVAS_H = 900
 
 DISPLAY_W = 900
 
-SCALE = 700
-Y_OFFSET = 120
+VIEW_MARGIN_X = 80
+VIEW_MARGIN_TOP = 120
+VIEW_MARGIN_BOTTOM = 50
+MAX_VIEW_SCALE = 350
 
 # ---------------- Connections ---------------- #
 
@@ -40,27 +42,67 @@ HAND_CONNECTIONS = [
 
 # ------------------------------------------------ #
 
-def project(pt):
+def project(pt, view):
     x, y, z = pt
-    u = int(CANVAS_W / 2 + x * SCALE)
-    v = int(CANVAS_H / 2 + y * SCALE + Y_OFFSET)
+    scale, center_x, center_y = view
+    u = int(CANVAS_W / 2 + (x - center_x) * scale)
+    v = int((VIEW_MARGIN_TOP + CANVAS_H - VIEW_MARGIN_BOTTOM) / 2 + (y - center_y) * scale)
     return (u, v)
 
 
-def draw_landmarks(canvas, landmarks, color):
+def draw_landmarks(canvas, landmarks, color, view):
     for p in landmarks:
-        cv2.circle(canvas, project(p), 4, color, -1)
+        cv2.circle(canvas, project(p, view), 4, color, -1)
 
 
-def draw_connections(canvas, landmarks, connections, color):
+def draw_connections(canvas, landmarks, connections, color, view):
     for a, b in connections:
         cv2.line(
             canvas,
-            project(landmarks[a]),
-            project(landmarks[b]),
+            project(landmarks[a], view),
+            project(landmarks[b], view),
             color,
             2
         )
+
+
+def fitted_view(frames):
+    """Fit the complete sequence into one stable viewport.
+
+    Landmark clips were extracted with different coordinate ranges. Fitting
+    once for the whole clip avoids a zoomed/cropped signer while keeping the
+    camera stable during the sign.
+    """
+    points = [
+        point
+        for frame in frames
+        if not frame.get("is_word_gap")
+        for group in ("pose", "left_hand", "right_hand")
+        for point in frame.get(group, [])
+        if len(point) >= 2
+    ]
+    if not points:
+        return (MAX_VIEW_SCALE, 0.0, 0.0)
+    xs = [float(point[0]) for point in points]
+    ys = [float(point[1]) for point in points]
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    span_x = max(max_x - min_x, 1e-6)
+    span_y = max(max_y - min_y, 1e-6)
+    available_width = CANVAS_W - 2 * VIEW_MARGIN_X
+    available_height = CANVAS_H - VIEW_MARGIN_TOP - VIEW_MARGIN_BOTTOM
+    scale = min(available_width / span_x, available_height / span_y, MAX_VIEW_SCALE)
+    return (scale, (min_x + max_x) / 2, (min_y + max_y) / 2)
+
+
+def fitted_views_by_token(frames):
+    """Return stable fitted views for each token in a composite sequence."""
+    grouped = {}
+    for frame in frames:
+        token = frame.get("token_label")
+        if token and not frame.get("is_word_gap"):
+            grouped.setdefault(token, []).append(frame)
+    return {token: fitted_view(token_frames) for token, token_frames in grouped.items()}
 
 
 def process_file(json_path_or_data, save_video=None, no_show=False, override_text=None, playback_fps=None):
@@ -75,6 +117,8 @@ def process_file(json_path_or_data, save_video=None, no_show=False, override_tex
         gloss = override_text if override_text else json_path.stem
 
     frames = data["frames"]
+    default_view = fitted_view(frames)
+    token_views = fitted_views_by_token(frames)
     source_fps = data.get("fps", 30)
     fps = float(playback_fps) if playback_fps else source_fps
     if fps <= 0:
@@ -103,10 +147,7 @@ def process_file(json_path_or_data, save_video=None, no_show=False, override_tex
     while frame_idx < len(frames):
         canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
         frame = frames[frame_idx]
-
-        pose = frame["pose"]
-        left = frame["left_hand"]
-        right = frame["right_hand"]
+        view = token_views.get(frame.get("token_label"), default_view)
 
         # ---------------- Text ---------------- #
         cv2.putText(
@@ -131,17 +172,21 @@ def process_file(json_path_or_data, save_video=None, no_show=False, override_tex
             cv2.LINE_AA
         )
 
-        # ---------------- Pose ---------------- #
-        draw_connections(canvas, pose, POSE_CONNECTIONS, (255,255,255))
-        draw_landmarks(canvas, pose, (255,255,255))
-
-        # ---------------- Left Hand ---------------- #
-        draw_connections(canvas, left, HAND_CONNECTIONS, (0,255,0))
-        draw_landmarks(canvas, left, (0,255,0))
-
-        # ---------------- Right Hand ---------------- #
-        draw_connections(canvas, right, HAND_CONNECTIONS, (0,0,255))
-        draw_landmarks(canvas, right, (0,0,255))
+        if frame.get("is_word_gap"):
+            cv2.putText(
+                canvas, "Next word", (CANVAS_W // 2 - 125, CANVAS_H // 2),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.2, (180,180,180), 2, cv2.LINE_AA,
+            )
+        else:
+            pose = frame["pose"]
+            left = frame["left_hand"]
+            right = frame["right_hand"]
+            draw_connections(canvas, pose, POSE_CONNECTIONS, (255,255,255), view)
+            draw_landmarks(canvas, pose, (255,255,255), view)
+            draw_connections(canvas, left, HAND_CONNECTIONS, (0,255,0), view)
+            draw_landmarks(canvas, left, (0,255,0), view)
+            draw_connections(canvas, right, HAND_CONNECTIONS, (0,0,255), view)
+            draw_landmarks(canvas, right, (0,0,255), view)
 
         # ---------------- Per-frame label (bottom-right) ---------------- #
         frame_label = frame.get("label")

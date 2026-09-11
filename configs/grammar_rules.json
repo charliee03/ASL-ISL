@@ -18,7 +18,7 @@
     "FOOD": "KHANA",
     "HELP": "MADAD",
     "PERSON": "VYAKTI",
-    "NAME": "NAM",
+    "NAME": "NAAM",
     "TIME": "SAMAY",
     "DAY": "DIN",
     "NIGHT": "RAAT",
@@ -28,6 +28,12 @@
     "FRIEND": "DOST",
     "FAMILY": "PARIVAR"
   },
+  "sentence_overrides": {
+    "are you free today": ["KYA", "TUM", "FREE", "HO"],
+    "are you hiding something": ["TUM", "KUCH", "CHUPA", "RAHE", "HO"],
+    "bring water for me": ["KRIPAYA", "MERE", "LIYE", "PANI", "LE", "AAO"]
+  },
+  "curated_sentence_review_csv": "docs/OFFLINE_SENTENCE_TRANSLATION_REVIEW.csv",
   "grammar_transformations": {
     "subject_verb_order": {
       "description": "ASL uses topic-comment order; ISL may require subject-verb-object",
@@ -72,7 +78,8 @@
   },
   "special_cases": {
     "pronouns": {
-      "I": "MAIN",
+      "I": "MEIN",
+      "MY": "MERA",
       "YOU": "TUM",
       "HE": "HE",
       "SHE": "SHE",
@@ -87,6 +94,10 @@
       "WHEN": "KAB",
       "WHY": "KYUN",
       "HOW": "KAISE"
+    },
+    "copulas": {
+      "AM": "HOON",
+      "IS": "HAI"
     }
   }
 }

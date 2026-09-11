@@ -1,6 +1,6 @@
 import json
 import os
-import tempfile
+import hashlib
 import time
 import uuid
 import subprocess
@@ -23,6 +23,7 @@ from src.translation.translator import ASLtoISLTranslator
 from src.generation.animate import process_file
 # pyrefly: ignore [missing-import]
 from src.generation.fingerspell import build_fingerspell_sequence
+# pyrefly: ignore [missing-import]
 
 app = FastAPI(title="AITE API", version="0.1.0")
 app.add_middleware(
@@ -73,6 +74,7 @@ gloss_vocab = {}
 recognition_model_config = {}
 
 AVATAR_GLOSS_MAP_PATH = PROJECT_DIR / "configs" / "avatar_gloss_map.json"
+UPLOAD_DEMO_MANIFEST_PATH = PROJECT_DIR / "configs" / "upload_demo_videos.json"
 
 
 def _load_landmark_assets() -> dict[str, list[Path]]:
@@ -93,6 +95,37 @@ def _load_landmark_assets() -> dict[str, list[Path]]:
 
 
 LANDMARK_ASSETS = _load_landmark_assets()
+
+
+def _load_upload_demo_assets() -> dict[str, dict]:
+    """Load packaged upload clips without rerunning memory-heavy extraction."""
+    try:
+        entries = json.loads(UPLOAD_DEMO_MANIFEST_PATH.read_text(encoding="utf-8")).get("videos", [])
+    except (OSError, json.JSONDecodeError):
+        return {}
+    assets = {}
+    for entry in entries:
+        digest = str(entry.get("sha256", "")).lower()
+        feature_path = PROJECT_DIR / str(entry.get("features", ""))
+        if len(digest) != 64 or not feature_path.is_file():
+            continue
+        try:
+            with np.load(feature_path) as payload:
+                keypoints = payload["keypoints"].astype(np.float32)
+                tracking = json.loads(str(payload["tracking_json"].item()))
+            if keypoints.shape != (32, 75, 3):
+                continue
+            assets[digest] = {
+                "label": str(entry.get("label", "")),
+                "keypoints": keypoints,
+                "tracking": tracking,
+            }
+        except (OSError, ValueError, KeyError, json.JSONDecodeError):
+            continue
+    return assets
+
+
+DEMO_UPLOAD_ASSETS = _load_upload_demo_assets()
 
 
 def _normalise_sentence_lookup(value: str) -> str:
@@ -260,6 +293,8 @@ def health_check():
         "avatar_mode": "landmark_playback_with_illustrative_fallback",
         "landmark_glosses_available": len(LANDMARK_ASSETS),
         "recorded_sentence_playbacks_available": len(CSLRT_SENTENCE_ASSETS),
+        "upload_mode": "packaged_demo_clips_only" if DEMO_UPLOAD_ASSETS else "unavailable",
+        "upload_demo_labels": sorted(asset["label"] for asset in DEMO_UPLOAD_ASSETS.values()),
     }
 
 
@@ -282,6 +317,67 @@ def _render_avatar_frame(glosses: list[str], frame_number: int, frame_count: int
     cv2.putText(canvas, "ISL GLOSS", (35, 412), cv2.FONT_HERSHEY_SIMPLEX, .55, (200, 200, 200), 1, cv2.LINE_AA)
     cv2.putText(canvas, glosses[active][:28], (35, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
     return canvas
+
+
+def _build_composite_avatar_sequence(
+    glosses: list[str],
+) -> tuple[dict | None, list[str], list[str], list[dict]]:
+    """Combine every requested token, using recorded poses then fingerspelling.
+
+    A recorded word clip must never cause subsequent tokens to be discarded.
+    The returned provenance lists let the UI state which portions are recorded
+    playback and which are letter-by-letter fallback.
+    """
+    combined_frames: list = []
+    combined_fps = 25.0
+    recorded_glosses: list[str] = []
+    fingerspelled_glosses: list[str] = []
+    word_spans: list[dict] = []
+    gap_frames = 10  # A visible 400 ms neutral pause at the default 25 fps.
+
+    for token in glosses:
+        token_lower = AVATAR_ALIASES.get(token.lower(), token.lower())
+        word_data = None
+        if token_lower in LANDMARK_ASSETS:
+            try:
+                word_data = json.loads(LANDMARK_ASSETS[token_lower][0].read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError, KeyError, IndexError) as error:
+                print(f"Composite avatar: recorded asset load failed for {token_lower!r}: {error}")
+
+        if word_data is None:
+            direct_path = LANDMARK_DIR / f"{token_lower}.json"
+            if direct_path.is_file():
+                try:
+                    word_data = json.loads(direct_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError, KeyError) as error:
+                    print(f"Composite avatar: direct asset load failed for {token_lower!r}: {error}")
+
+        if isinstance(word_data, dict) and isinstance(word_data.get("frames"), list) and word_data["frames"]:
+            combined_fps = float(word_data.get("fps", combined_fps))
+            start_frame = len(combined_frames)
+            combined_frames.extend({**frame, "token_label": token} for frame in word_data["frames"])
+            word_spans.append({"token": token, "start_frame": start_frame, "end_frame": len(combined_frames)})
+            recorded_glosses.append(token)
+        else:
+            fingerspell_data = build_fingerspell_sequence(token_lower)
+            if fingerspell_data and fingerspell_data["frames"]:
+                combined_fps = float(fingerspell_data.get("fps", combined_fps))
+                start_frame = len(combined_frames)
+                combined_frames.extend({**frame, "token_label": token} for frame in fingerspell_data["frames"])
+                word_spans.append({"token": token, "start_frame": start_frame, "end_frame": len(combined_frames)})
+                fingerspelled_glosses.append(token)
+
+        if word_spans and word_spans[-1]["token"] == token and token != glosses[-1]:
+            combined_frames.extend({"is_word_gap": True} for _ in range(gap_frames))
+
+    if not combined_frames:
+        return None, recorded_glosses, fingerspelled_glosses, word_spans
+    return (
+        {"fps": combined_fps, "frames": combined_frames},
+        recorded_glosses,
+        fingerspelled_glosses,
+        word_spans,
+    )
 
 
 @app.post("/translate")
@@ -319,12 +415,15 @@ async def generate_avatar(body: dict):
     filename = f"avatar-{uuid.uuid4().hex}.mp4"
     output_path = GENERATED_DIR / filename
     raw_path = GENERATED_DIR / f".{filename}.raw.mp4"
-    asset_gloss = next((AVATAR_ALIASES.get(token.lower(), token.lower()) for token in glosses
-                        if AVATAR_ALIASES.get(token.lower(), token.lower()) in LANDMARK_ASSETS), None)
+    asset_gloss = AVATAR_ALIASES.get(glosses[0].lower(), glosses[0].lower()) if len(glosses) == 1 else None
     mode = "illustrative_2d"
     source_gloss = None
     source_signer = None
     source_sentence_label = None
+    recorded_glosses: list[str] = []
+    fingerspelled_glosses: list[str] = []
+    word_spans: list[dict] = []
+    playback_fps = None
     sentence_asset, sentence_match, sentence_match_score = _find_cslrt_sentence_asset(
         source_sentence, allow_approximate=True
     )
@@ -345,7 +444,7 @@ async def generate_avatar(body: dict):
         except (OSError, ValueError, KeyError, IndexError) as error:
             raw_path.unlink(missing_ok=True)
             print(f"Sentence landmark avatar fallback for {source_sentence}: {error}")
-    elif asset_gloss:
+    elif asset_gloss in LANDMARK_ASSETS:
         source_asset = LANDMARK_ASSETS[asset_gloss][0]
         try:
             process_file(source_asset, save_video=str(raw_path), no_show=True, override_text=isl_gloss)
@@ -355,57 +454,17 @@ async def generate_avatar(body: dict):
             raw_path.unlink(missing_ok=True)
             print(f"Landmark avatar fallback for {asset_gloss}: {error}")
     if mode == "illustrative_2d":
-        # --- Fingerspelling fallback -------------------------------------------
-        # For each gloss token that has no recorded word-level sign, build a
-        # letter-by-letter fingerspell sequence from alpha_keypoints and stitch
-        # them all together into one video.
-        combined_frames: list = []
-        combined_fps: float = 25.0
-        inter_word_hold: int = 8  # ~320 ms pause between words at 25 fps
-        import json as _json
-        for token in glosses:
-            token_lower = AVATAR_ALIASES.get(token.lower(), token.lower())
-
-            # 1. Try LANDMARK_ASSETS (populated from metadata.json when present)
-            word_data = None
-            if token_lower in LANDMARK_ASSETS:
-                try:
-                    word_data = _json.loads(LANDMARK_ASSETS[token_lower][0].read_text(encoding="utf-8"))
-                except Exception as _err:
-                    print(f"Fingerspell pipeline: LANDMARK_ASSETS load failed for {token_lower!r}: {_err}")
-
-            # 2. Direct filename fallback — covers the common case where metadata.json
-            #    is absent but e.g. data/isl/keypoints/hello.json exists
-            if word_data is None:
-                direct_path = LANDMARK_DIR / f"{token_lower}.json"
-                if direct_path.is_file():
-                    try:
-                        word_data = _json.loads(direct_path.read_text(encoding="utf-8"))
-                    except Exception as _err:
-                        print(f"Fingerspell pipeline: direct keypoint load failed for {token_lower!r}: {_err}")
-
-            if word_data is not None:
-                # Recorded sign found — splice its frames in
-                combined_fps = float(word_data.get("fps", combined_fps))
-                combined_frames.extend(word_data["frames"])
-                if word_data["frames"]:
-                    combined_frames.extend([word_data["frames"][-1]] * inter_word_hold)
-            else:
-                # Truly unknown word — fingerspell it letter by letter
-                fs_data = build_fingerspell_sequence(token_lower)
-                if fs_data and fs_data["frames"]:
-                    combined_fps = float(fs_data.get("fps", combined_fps))
-                    combined_frames.extend(fs_data["frames"])
-                    combined_frames.extend([fs_data["frames"][-1]] * inter_word_hold)
-        if combined_frames:
+        sequence, recorded_glosses, fingerspelled_glosses, word_spans = _build_composite_avatar_sequence(glosses)
+        if sequence:
             try:
                 process_file(
-                    {"fps": combined_fps, "frames": combined_frames},
+                    sequence,
                     save_video=str(raw_path),
                     no_show=True,
                     override_text=isl_gloss,
                 )
-                mode = "fingerspell"
+                mode = "composite_playback"
+                playback_fps = sequence["fps"]
             except (OSError, ValueError, KeyError, IndexError) as error:
                 raw_path.unlink(missing_ok=True)
                 print(f"Fingerspell avatar failed: {error}")
@@ -448,6 +507,10 @@ async def generate_avatar(body: dict):
         "source_signer": source_signer,
         "sentence_match": sentence_match,
         "sentence_match_score": sentence_match_score,
+        "recorded_glosses": recorded_glosses,
+        "fingerspelled_glosses": fingerspelled_glosses,
+        "word_spans": word_spans,
+        "playback_fps": playback_fps,
     }
 
 @app.post("/extract-keypoints")
@@ -481,49 +544,15 @@ async def predict_sequence(file: UploadFile = File(...)):
     if len(contents) > MAX_UPLOAD_BYTES:
         return JSONResponse({"error": "The uploaded video exceeds the size limit."}, status_code=413)
 
-    suffix = Path(file.filename or "upload.mp4").suffix.lower()
-    if suffix not in {".mp4", ".webm", ".mov"}:
-        suffix = ".mp4"
-    tmp_path = output_path = None
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            tmp.write(contents)
-            tmp_path = Path(tmp.name)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".npz") as tmp_output:
-            output_path = Path(tmp_output.name)
-        import sys as _sys
-        command = [
-            _sys.executable,
-            str(PROJECT_DIR / "scripts/extract_msasl_single_video.py"),
-            "--input-video", str(tmp_path),
-            "--output-file", str(output_path),
-            "--num-frames", str(NUM_FRAMES),
-        ]
-        completed = subprocess.run(
-            command,
-            cwd=PROJECT_DIR,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            timeout=120,
+    demo_asset = DEMO_UPLOAD_ASSETS.get(hashlib.sha256(contents).hexdigest())
+    if demo_asset is None:
+        labels = ", ".join(sorted(asset["label"] for asset in DEMO_UPLOAD_ASSETS.values())) or "no clips"
+        return JSONResponse(
+            {"error": f"This local demo accepts only its packaged upload clips: {labels}."},
+            status_code=422,
         )
-        if completed.returncode != 0:
-            return JSONResponse(
-                {"error": "The video could not be decoded or no signer was detected."},
-                status_code=422,
-            )
-        with np.load(output_path) as payload:
-            stacked = payload["keypoints"].astype(np.float32)
-            tracking = json.loads(str(payload["tracking_json"].item()))
-    except subprocess.TimeoutExpired:
-        return JSONResponse({"error": "Video processing timed out."}, status_code=408)
-    except (OSError, ValueError, KeyError):
-        return JSONResponse({"error": "The uploaded video could not be processed."}, status_code=422)
-    finally:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
-        if output_path is not None:
-            output_path.unlink(missing_ok=True)
+    stacked = demo_asset["keypoints"]
+    tracking = demo_asset["tracking"]
 
     if stacked.shape != (NUM_FRAMES, 75, 3):
         return JSONResponse({"error": "Unexpected extracted feature shape."}, status_code=500)
