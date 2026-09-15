@@ -45,7 +45,9 @@ class ASLtoISLTranslator:
         self.tokenizer = None
         self.model = None
         self.gemini_client = None
-        self.gemini_model = os.getenv("AITE_GEMINI_MODEL", "gemini-2.5-flash")
+        # Gemini 2.5 Flash is no longer available to newly provisioned API
+        # projects.  Keep an environment override for existing deployments.
+        self.gemini_model = os.getenv("AITE_GEMINI_MODEL", "gemini-3.6-flash")
         self.gemini_allowed_glosses = self._load_gemini_allowed_glosses()
         if enable_llm:
             self._load_llm(quantize)

@@ -24,7 +24,7 @@ does not enforce that CSV as a linguistic-approval gate.
 | --- | --- | --- |
 | `AITE_ENABLE_GEMINI` | Remote draft refinement | false |
 | `GEMINI_API_KEY` | Server-side credential | kept outside repository |
-| `AITE_GEMINI_MODEL` | Requested model | `gemini-2.5-flash` in current code |
+| `AITE_GEMINI_MODEL` | Requested model | `gemini-3.6-flash` in current code |
 | `AITE_ENABLE_LLM` | Local Hugging Face Llama path | false |
 
 Gemini receives filtered text, draft and vocabulary, not uploaded video in this
